@@ -145,7 +145,7 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
     NSUInteger count = 0, offset = 0x0uLL;
 
     while (count < info->numberOfFields) {
-        if ([name isEqual:*(&info->fieldInfo->field_0 + offset)]) return count;
+        if ([name isEqualToString:*(&info->fieldInfo->field_0 + offset)]) return count;
         offset += 0x4uLL;
         count++;
     };
@@ -197,8 +197,8 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
     [viewOptions setBoolValue:disableReadReceipts forField:@"disableReadReceipts"];
     [viewOptions setBoolValue:hideNotifBadgesInChat forField:@"shouldHideBadgeInBackButton"];
 
-    if (![keyboardStateAfterEnterChat isEqual:@"ADAPTIVE"]) {
-        [viewOptions setInt64Value:[keyboardStateAfterEnterChat isEqual:@"ALWAYS_EXPANDED"] ? 2 : 1 forField:@"onOpenKeyboardState"];
+    if (![keyboardStateAfterEnterChat isEqualToString:@"ADAPTIVE"]) {
+        [viewOptions setInt64Value:[keyboardStateAfterEnterChat isEqualToString:@"ALWAYS_EXPANDED"] ? 2 : 1 forField:@"onOpenKeyboardState"];
     }
 
     return %orig;
@@ -227,7 +227,7 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
 %property (nonatomic, assign) CGFloat duration;
 
 - (void)startTimer {
-    self.isMyStory = [self.ownerId isEqual:[[%c(FBAnalytics) sharedAnalytics] userFBID]];
+    self.isMyStory = [self.ownerId isEqualToString:[[%c(FBAnalytics) sharedAnalytics] userFBID]];
     if (!disableStorySeenReceipts || self.isMyStory) {
         return %orig;
     }
@@ -274,7 +274,7 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
 %hook MSGMessageListViewModelGenerator
 
 - (void)didLoadThreadModel:(id)arg1 threadViewModelMap:(id)arg2 threadSessionIdentifier:(id)arg3 messageModels:(NSMutableArray <MSGTempMessageListItemModel *> *)models threadParticipants:(id)arg5 attributionIDV2:(id)arg6 loadMoreStateOlder:(int)arg7 loadMoreStateNewer:(int)arg8 didLoadNewIsland:(BOOL)arg9 completion:(id)arg10 {
-    if ([@[@"INBOX_ONLY", @"BOTH"] containsObject:disableTypingIndicator] && [[[models lastObject] messageId] isEqual:@"typing_indicator"]) {
+    if ([@[@"INBOX_ONLY", @"BOTH"] containsObject:disableTypingIndicator] && [[[models lastObject] messageId] isEqualToString:@"typing_indicator"]) {
         [models removeLastObject];
     }
     %orig;
@@ -334,7 +334,7 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
 - (void)didLoadContactList:(NSArray *)list contactExtrasById:(NSDictionary *)extras {
     if (hideSuggestedContactsInSearch) {
         NSString *featureIdentifier = MSHookIvar<NSString *>(self, "_featureIdentifier");
-        if ([featureIdentifier isEqual:@"universal_search_null_state"]) {
+        if ([featureIdentifier isEqualToString:@"universal_search_null_state"]) {
             return %orig(nil, nil);
         }
     }
@@ -397,8 +397,6 @@ static BOOL hideTabBar = NO;
 
         if (noAds && adUnitIndex + 2 < [currentRows count]) [currentRows removeObjectAtIndex:adUnitIndex + 2];
         if (hideNotesRow) [currentRows removeObjectAtIndex:0];
-
-        [[unitsState unitKeyToViewControllerMap] removeObjectForKey:@"ads_renderer"];
     }
 
     return currentRows;
@@ -429,7 +427,7 @@ static BOOL hideTabBar = NO;
 - (void)_handleOverflowMenuButton:(UIButton *)button {
     NSMutableArray *actions = [MSHookIvar<NSArray *>(self, "_overflowActions") mutableCopy];
     NSString *storyAuthorId = MSHookIvar<NSString *>(self, "_storyAuthorId");
-    if (canSaveFriendsStories && ![storyAuthorId isEqual:[[%c(FBAnalytics) sharedAnalytics] userFBID]] && [actions count] == 3) {
+    if (canSaveFriendsStories && ![storyAuthorId isEqualToString:[[%c(FBAnalytics) sharedAnalytics] userFBID]] && [actions count] == 3) {
         actionTypeSaveClass = actionTypeSaveClass ?: MSGModelDefineClass(&actionTypeSaveInfo);
         MSGStoryViewerOverflowMenuActionTypeSave *actionTypeSave = [actionTypeSaveClass newADTModelWithInfo:&actionTypeSaveInfo adtValueSubtype:2];
 
