@@ -389,7 +389,7 @@ static BOOL hideTabBar = NO;
 //TODO: Find a better way
 - (NSArray *)inboxRows {
     NSMutableArray *currentRows = [%orig mutableCopy];
-    if ((noAds || hideNotesRow) && [currentRows count] > 0) {
+    if ([self isInitializationComplete] && (noAds || hideNotesRow) && [currentRows count] > 0) {
         MSGThreadListUnitsSate *unitsState = MSHookIvar<MSGThreadListUnitsSate *>(self, "_unitsState");
         NSMutableDictionary *units = [unitsState unitKeyToUnit];
         MSGInboxUnit *adUnit = [units objectForKey:@"ads_renderer"];

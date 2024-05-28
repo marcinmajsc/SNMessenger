@@ -1,4 +1,4 @@
-ARCHS = arm64 arm64e
+ARCHS = arm64
 PACKAGE_VERSION = 1.0.0
 TARGET = iphone:clang:latest:12.4
 INSTALL_TARGET_PROCESSES = Messenger

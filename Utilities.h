@@ -1,5 +1,6 @@
 #import <UIKit/UIKit.h>
 #import <RemoteLog.h> // For debugging
+#import <rootless.h>
 
 #define PREF_CHANGED_NOTIF "SNMessenger/prefChanged"
 
@@ -13,7 +14,7 @@ static inline NSBundle *SNMessengerBundle() {
         if (tweakBundlePath)
             bundle = [NSBundle bundleWithPath:tweakBundlePath];
         else
-            bundle = [NSBundle bundleWithPath:@"/Library/Application Support/SNMessenger.bundle"];
+            bundle = [NSBundle bundleWithPath:ROOT_PATH_NS(@"/Library/Application Support/SNMessenger.bundle")];
     });
     return bundle;
 }

@@ -1,9 +1,12 @@
 Package: com.nguyenasang.snmessenger
 Name: SNMessenger
-Depends: mobilesubstrate, firmware (>= 12)
+Depends: mobilesubstrate, firmware (>= 11.0)
 Version: 1.0.0
 Architecture: iphoneos-arm
 Description: The best tweak for Messenger app.
 Maintainer: NguyenASang
 Author: NguyenASang
 Section: Tweaks
+Replaces: com.haoict.messengernoads
+Provides: com.haoict.messengernoads
+Conflicts: com.haoict.messengernoads
