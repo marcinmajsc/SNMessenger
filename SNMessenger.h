@@ -43,16 +43,16 @@
 - (void)_stopHDAnimationAndToggleHD;
 @end
 
-//===============   TYPES TABLE   ===============//
-// 0: BOOL                       7: weak object  //
-// 1: (unsigned) int             8: MCFTypeRef   //
-// 2: (unsigned) long long       9: CGRect       //
-// 3: double                    10: CGSize       //
-// 4: float                     11: CGPoint      //
-// 5: struct                    12: NSRange      //
-// 6: strong object             13: UIEdgeInsets //
-// ...                                           //
-//===============================================//
+//=============   TYPES TABLE   ==============//
+// 0: Bool                    7: Weak Object  //
+// 1: (unsigned) Int32        8: MCFTypeRef   //
+// 2: (unsigned) Int64        9: CGRect       //
+// 3: Double                 10: CGSize       //
+// 4: Float                  11: CGPoint      //
+// 5: Struct                 12: NSRange      //
+// 6: Strong Object          13: UIEdgeInsets //
+// ...                                        //
+//============================================//
 
 typedef struct {
     NSString *field_0;

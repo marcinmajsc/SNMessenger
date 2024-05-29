@@ -277,6 +277,7 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
     if ([@[@"INBOX_ONLY", @"BOTH"] containsObject:disableTypingIndicator] && [[[models lastObject] messageId] isEqualToString:@"typing_indicator"]) {
         [models removeLastObject];
     }
+
     %orig;
 }
 
@@ -311,6 +312,7 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
     if (hideSearchBar && [viewController isKindOfClass:%c(MSGInboxViewController)]) {
         return;
     }
+
     %orig;
 }
 
@@ -338,6 +340,7 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
             return %orig(nil, nil);
         }
     }
+
     %orig;
 }
 
@@ -386,17 +389,17 @@ static BOOL hideTabBar = NO;
 
 %hook MSGThreadListDataSource
 
-//TODO: Find a better way
 - (NSArray *)inboxRows {
     NSMutableArray *currentRows = [%orig mutableCopy];
     if ([self isInitializationComplete] && (noAds || hideNotesRow) && [currentRows count] > 0) {
         MSGThreadListUnitsSate *unitsState = MSHookIvar<MSGThreadListUnitsSate *>(self, "_unitsState");
         NSMutableDictionary *units = [unitsState unitKeyToUnit];
         MSGInboxUnit *adUnit = [units objectForKey:@"ads_renderer"];
-        NSUInteger adUnitIndex = [[adUnit positionInThreadList] belowThreadIndex];
+        NSUInteger adUnitIndex = [[adUnit positionInThreadList] belowThreadIndex] + 2;
+        BOOL isOffline = [units objectForKey:@"qp"];
 
-        if (noAds && adUnitIndex + 2 < [currentRows count]) [currentRows removeObjectAtIndex:adUnitIndex + 2];
-        if (hideNotesRow) [currentRows removeObjectAtIndex:0];
+        if (noAds && adUnitIndex < [currentRows count]) [currentRows removeObjectAtIndex:adUnitIndex + isOffline];
+        if (hideNotesRow) [currentRows removeObjectAtIndex:isOffline];
     }
 
     return currentRows;
