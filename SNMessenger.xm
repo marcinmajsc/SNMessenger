@@ -139,33 +139,45 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
 
 %hook MSGModel
 
-%new(Q@:@)
-- (NSUInteger)indexOfField:(NSString *)name {
+%new(v@:@)
+- (void)setValueForField:(NSString *)name, /* value: */ ... {
     MSGModelInfo *info = MSHookIvar<MSGModelInfo *>(self, "_modelInfo");
-    NSUInteger count = 0, offset = 0x0uLL;
+    NSInteger index = 0, type = -1, offset = 0x0;
 
-    while (count < info->numberOfFields) {
-        if ([name isEqualToString:*(&info->fieldInfo->field_0 + offset)]) return count;
-        offset += 0x4uLL;
-        count++;
+    while (index < info->numberOfFields) {
+        if ([name isEqualToString:*(&info->fieldInfo->field_0 + offset)]) {
+            type = (NSInteger)*(&info->fieldInfo->field_0 + offset + 0x3) % 256;
+            break;
+        }
+
+        offset += 0x4;
+        index++;
     };
 
-    return 0;
-}
+    va_list args;
+    va_start(args, name);
 
-%new(v@:B@)
-- (void)setBoolValue:(BOOL)value forField:(NSString *)name {
-    [self setBoolValue:value forFieldIndex:[self indexOfField:name]];
-}
+    switch (type) {
+        case 0: {
+            [self setBoolValue:(BOOL)va_arg(args, int) forFieldIndex:index];
+            break;
+        }
 
-%new(v@:q@)
-- (void)setInt64Value:(NSInteger)value forField:(NSString *)name {
-    [self setInt64Value:value forFieldIndex:[self indexOfField:name]];
-}
+        case 2: {
+            [self setInt64Value:va_arg(args, NSInteger) forFieldIndex:index];
+            break;
+        }
 
-%new(v@:@@)
-- (void)setObjectValue:(id)value forField:(NSString *)name {
-    [self setObjectValue:value forFieldIndex:[self indexOfField:name]];
+        case 6: {
+            [self setObjectValue:va_arg(args, id) forFieldIndex:index];
+            break;
+        }
+
+        default:
+            break;
+    }
+
+    va_end(args);
 }
 
 %end
@@ -194,11 +206,11 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
     MSGThreadViewOptions *viewOptions = [options viewOptions];
 
     //TODO: fake seen receipt
-    [viewOptions setBoolValue:disableReadReceipts forField:@"disableReadReceipts"];
-    [viewOptions setBoolValue:hideNotifBadgesInChat forField:@"shouldHideBadgeInBackButton"];
+    [viewOptions setValueForField:@"disableReadReceipts", disableReadReceipts];
+    [viewOptions setValueForField:@"shouldHideBadgeInBackButton", hideNotifBadgesInChat];
 
     if (![keyboardStateAfterEnterChat isEqualToString:@"ADAPTIVE"]) {
-        [viewOptions setInt64Value:[keyboardStateAfterEnterChat isEqualToString:@"ALWAYS_EXPANDED"] ? 2 : 1 forField:@"onOpenKeyboardState"];
+        [viewOptions setValueForField:@"onOpenKeyboardState", [keyboardStateAfterEnterChat isEqualToString:@"ALWAYS_EXPANDED"] ? 2 : 1];
     }
 
     return %orig;
@@ -435,7 +447,7 @@ static BOOL hideTabBar = NO;
         MSGStoryViewerOverflowMenuActionTypeSave *actionTypeSave = [actionTypeSaveClass newADTModelWithInfo:&actionTypeSaveInfo adtValueSubtype:2];
 
         MSGStoryOverlayProfileViewActionStandard *actionStandard = [actionStandardClass newADTModelWithInfo:&actionStandardInfo adtValueSubtype:0];
-        [actionStandard setObjectValue:actionTypeSave forField:@"type"];
+        [actionStandard setValueForField:@"type", actionTypeSave];
 
         [actions insertObject:actionStandard atIndex:2];
         [self setValue:actions forKey:@"_overflowActions"];

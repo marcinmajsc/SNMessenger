@@ -1,4 +1,5 @@
 #import <AVKit/AVKit.h>
+#import <stdarg.h>
 #import "Utilities.h"
 #import "Settings/SNSettingsViewController.h"
 
@@ -43,16 +44,17 @@
 - (void)_stopHDAnimationAndToggleHD;
 @end
 
-//=============   TYPES TABLE   ==============//
-// 0: Bool                    7: Weak Object  //
-// 1: (unsigned) Int32        8: MCFTypeRef   //
-// 2: (unsigned) Int64        9: CGRect       //
-// 3: Double                 10: CGSize       //
-// 4: Float                  11: CGPoint      //
-// 5: Struct                 12: NSRange      //
-// 6: Strong Object          13: UIEdgeInsets //
-// ...                                        //
-//============================================//
+//============   TYPE LOOKUP TABLE   =============//
+//                                                //
+//   0: Bool                    7: Weak Object    //
+//   1: (Unsigned) Int32        8: MCFTypeRef     //
+//   2: (Unsigned) Int64        9: CGRect         //
+//   3: Double                 10: CGSize         //
+//   4: Float                  11: CGPoint        //
+//   5: Struct                 12: NSRange        //
+//   6: Strong Object          13: UIEdgeInsets   //
+//                                                //
+//================================================//
 
 typedef struct {
     NSString *field_0;
@@ -103,13 +105,10 @@ typedef struct {
 } MSGModelFieldInfo;
 
 typedef struct {
-} MSGCQLResultSetInfo;
-
-typedef struct {
     const char *name;
     NSUInteger numberOfFields;
     MSGModelFieldInfo *fieldInfo;
-    MSGCQLResultSetInfo *resultSet;
+    struct MSGCQLResultSetInfo *resultSet;
     BOOL var4;
 } MSGModelInfo;
 
@@ -119,15 +118,12 @@ typedef struct {
 #define DEFAULT
 
 @interface MSGModel : NSObject
-+ (instancetype)newADTModelWithInfo:(const MSGModelInfo *)info adtValueSubtype:(NSInteger)adtValueSubtype;
-+ (instancetype)newWithModelInfo:(const MSGModelInfo *)info;
-- (NSUInteger)indexOfField:(NSString *)name;
++ (instancetype)newADTModelWithInfo:(MSGModelInfo *)info adtValueSubtype:(NSInteger)adtValueSubtype;
++ (instancetype)newWithModelInfo:(MSGModelInfo *)info; // adtValueSubtype = -1
 - (void)setBoolValue:(BOOL)value forFieldIndex:(NSUInteger)index;
-- (void)setBoolValue:(BOOL)value forField:(NSString *)name;
 - (void)setInt64Value:(NSInteger)value forFieldIndex:(NSUInteger)index;
-- (void)setInt64Value:(NSInteger)value forField:(NSString *)name;
 - (void)setObjectValue:(id)value forFieldIndex:(NSUInteger)index;
-- (void)setObjectValue:(id)value forField:(NSString *)name;
+- (void)setValueForField:(NSString *)name, /* value: */ ...;
 @end
 
 @interface MSGStoryOverlayProfileViewActionStandard : MSGModel
