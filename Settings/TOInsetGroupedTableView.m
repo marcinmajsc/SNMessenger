@@ -226,4 +226,11 @@ static CGFloat const kTOInsetGroupedTableViewCornerRadius = 10.0f;
     cell.layer.maskedCorners = cornerRoundingFlags;
 }
 
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    
+    // Resize the table view to fit its superview
+    self.frame = self.superview.bounds;
+}
+
 @end
