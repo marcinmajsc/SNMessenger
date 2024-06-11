@@ -10,8 +10,9 @@
 "QUICK_ENABLE_DISABLE_READ_RECEIPT" = "Quickly enable/disable read receipts";
 "CHAT_OPTIONS" = "Chat options";
 "ALWAYS_SEND_HD_PHOTOS" = "Always send HD photos";
+"ALWAYS_SEND_HD_PHOTOS_DESCRIPTION" = "Only if HD option appears in image picker";
 "DISABLE_READ_RECEIPTS" = "Disable read receipts";
-"DISABLE_LONG_PRESS_TO_CHANGE_CHAT_THEME" = "Disable long press to change chat theme";
+"DISABLE_LONG_PRESS_TO_CHANGE_THEME" = "Disable long press to change theme";
 "DISABLE_TYPING_INDICATOR_TITLE" = "Disable typing indicator in";
 "DISABLE_TYPING_INDICATOR" = "Disable typing indicator";
 "NOWHERE" = "Nowhere";

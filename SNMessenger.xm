@@ -32,7 +32,7 @@ static void reloadPrefs() {
 
     alwaysSendHdPhotos = [[settings objectForKey:@"alwaysSendHdPhotos"] ?: @(YES) boolValue];
     disableReadReceipts = [[settings objectForKey:@"disableReadReceipts"] ?: @(NO) boolValue];
-    disableLongPressToChangeChatTheme = [[settings objectForKey:@"disableLongPressToChangeChatTheme"] ?: @(NO) boolValue];
+    disableLongPressToChangeChatTheme = [[settings objectForKey:@"disableLongPressToChangeTheme"] ?: @(NO) boolValue];
     disableTypingIndicator = [[settings objectForKey:@"disableTypingIndicator"] ?: @[@"NOWHERE"] firstObject];
     hideNotifBadgesInChat = [[settings objectForKey:@"hideNotifBadgesInChat"] ?: @(NO) boolValue];
     keyboardStateAfterEnterChat = [[settings objectForKey:@"keyboardStateAfterEnterChat"] ?: @[@"ADAPTIVE"] firstObject];
@@ -84,6 +84,7 @@ static void reloadPrefs() {
 
         self.navigationBar.topItem.rightBarButtonItems = @[self.navigationBar.topItem.customRightItem, self.eyeItem];
     }
+
     %orig;
 }
 
@@ -205,7 +206,7 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
 - (instancetype)initWithMailbox:(id)arg1 threadQueryKey:(id)arg2 threadSessionLifecycle:(id)arg3 threadNavigationData:(id)arg4 navigationEntryPoint:(int)arg5 options:(MSGThreadViewControllerOptions *)options metricContextsContainer:(id)arg7 datasource:(id)arg8 {
     MSGThreadViewOptions *viewOptions = [options viewOptions];
 
-    //TODO: fake seen receipt
+    //TODO: Fake seen receipt
     [viewOptions setValueForField:@"disableReadReceipts", disableReadReceipts];
     [viewOptions setValueForField:@"shouldHideBadgeInBackButton", hideNotifBadgesInChat];
 

@@ -6,5 +6,7 @@
 #import "Utilities.h"
 
 @interface TOInsetGroupedTableView : UITableView
+@property (nonatomic, assign) NSInteger realSeparatorStyle;
+@property (nonatomic, strong) NSMutableSet *observedViews;
 - (instancetype)initWithFrame:(CGRect)frame;
 @end

@@ -58,11 +58,12 @@
     //========================== CHAT OPTIONS ==========================//
 
     SNCellModel *alwaysSendHdPhotosCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"ALWAYS_SEND_HD_PHOTOS"];
+    alwaysSendHdPhotosCell.subtitleKey = @"ALWAYS_SEND_HD_PHOTOS_DESCRIPTION";
     alwaysSendHdPhotosCell.prefKey = @"alwaysSendHdPhotos";
     alwaysSendHdPhotosCell.defaultValue = YES;
 
-    SNCellModel *disableLongPressToChangeChatThemeCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"DISABLE_LONG_PRESS_TO_CHANGE_CHAT_THEME"];
-    disableLongPressToChangeChatThemeCell.prefKey = @"disableLongPressToChangeChatTheme";
+    SNCellModel *disableLongPressToChangeThemeCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"DISABLE_LONG_PRESS_TO_CHANGE_THEME"];
+    disableLongPressToChangeThemeCell.prefKey = @"disableLongPressToChangeTheme";
 
     SNCellModel *disableReadReceiptsCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"DISABLE_READ_RECEIPTS"];
     disableReadReceiptsCell.prefKey = @"disableReadReceipts";
@@ -138,20 +139,21 @@
     sangNguyenCell.url = @"https://github.com/NguyenASang";
     sangNguyenCell.subtitleKey = @"NguyenASang";
 
+    //TODO: Create report template
     SNCellModel *donationCell = [[SNCellModel alloc] initWithType:Link labelKey:@"DONATION"];
-    donationCell.url = @"https://paypal.me/haoict";
+    donationCell.url = @"";
     donationCell.subtitleKey = @"BUY_ME_A_COFFEE";
 
     SNCellModel *foundABugCell = [[SNCellModel alloc] initWithType:Link labelKey:@"FOUND_A_BUG"];
-    foundABugCell.url = @"https://github.com/NguyenASang/messenger-no-ads/issues/new?assignees=&labels=&projects=&template=bug_report.md";
+    foundABugCell.url = @"";
     foundABugCell.subtitleKey = @"LEAVE_A_BUG_REPORT_ON_GITHUB";
 
     SNCellModel *featureRequestCell = [[SNCellModel alloc] initWithType:Link labelKey:@"FEATURE_REQUEST"];
-    featureRequestCell.url = @"https://github.com/NguyenASang/messenger-no-ads/issues/new?assignees=&labels=&projects=&template=feature_request.md";
+    featureRequestCell.url = @"";
     featureRequestCell.subtitleKey = @"SUBMIT_YOUR_REQUEST_ON_GITHUB";
 
     SNCellModel *sourceCodeCell = [[SNCellModel alloc] initWithType:Link labelKey:@"SOURCE_CODE"];
-    sourceCodeCell.url = @"https://github.com/NguyenASang/messenger-no-ads";
+    sourceCodeCell.url = @"https://github.com/NguyenASang/SNMessenger";
     sourceCodeCell.subtitleKey = @"Github";
 
     _tableData = @{
@@ -162,7 +164,7 @@
 
         @"1": @[
                 alwaysSendHdPhotosCell,
-                disableLongPressToChangeChatThemeCell,
+                disableLongPressToChangeThemeCell,
                 disableReadReceiptsCell,
                 disableTypingIndicatorCell,
                 hideNotifBadgesInChatCell,

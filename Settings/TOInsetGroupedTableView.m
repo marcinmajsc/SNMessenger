@@ -1,31 +1,11 @@
-// An iOS 12 back-port of the grouped inset table view style in iOS 13.
+// An iOS 12 version of Inset Grouped Table in iOS 13
 // Author: Timothy Oliver
 // Maintainer: NguyenASang
 
 #import "TOInsetGroupedTableView.h"
 
-/**
- The KVO key we'll be using to detect when the table view
- manipulates the shape of any of the subviews
-*/
-
-static NSString * const kTOInsetGroupedTableViewFrameKey = @"frame";
-
-/**
- The KVO key we'll be using to detect when the table view
- has been set to selected or not (which is the best time to calculate rounded corners)
-*/
-static NSString * const kTOInsetGroupedTableViewSelectedKey = @"selected";
-
-/** The corner radius of the top and bottom cells.
- This is hard-coded with the same value as in iOS 13.
- */
-static CGFloat const kTOInsetGroupedTableViewCornerRadius = 10.0f;
-
-@interface TOInsetGroupedTableView ()
-@property (nonatomic, strong) NSMutableSet *observedViews;
-@property (nonatomic, assign) int realSeparatorStyle;
-@end
+static NSString * const kInsetGroupedTableFrame = @"frame";
+static NSString * const kInsetGroupedTableCell = @"cell";
 
 @implementation TOInsetGroupedTableView
 
@@ -40,12 +20,19 @@ static CGFloat const kTOInsetGroupedTableViewCornerRadius = 10.0f;
 }
 
 - (void)commonInit {
-    // Create the set to hold our observed views
     self.observedViews = [NSMutableSet set];
 
-    // Explicitly disable any magic insetting, as we'll
-    // be manually calculating the insetting ourselves
+    // Disable auto insetting
     self.insetsLayoutMarginsFromSafeArea = NO;
+}
+
+- (void)layoutSubviews {
+    [super layoutSubviews];
+
+    self.backgroundColor = colorWithHexString(isDarkMode ? @"#000000" : @"#F5F5F5");
+
+    // Resize the table view to fit its superview
+    self.frame = self.superview.bounds;
 }
 
 - (void)dealloc {
@@ -57,83 +44,57 @@ static CGFloat const kTOInsetGroupedTableViewCornerRadius = 10.0f;
 - (void)didAddSubview:(UIView *)subview {
     [super didAddSubview:subview];
 
-    self.backgroundColor = colorWithHexString(isDarkMode ? @"#000000" : @"#F5F5F5");
-
-    // If it's not a section header/footer view, or a table cell, ignore it
-    if (![subview isKindOfClass:[UITableViewHeaderFooterView class]] && ![subview isKindOfClass:[UITableViewCell class]]) {
-        return;
+    if ([subview isKindOfClass:[UITableViewHeaderFooterView class]] || [subview isKindOfClass:[UITableViewCell class]]) {
+        [self addObserverIfNeeded:subview];
     }
-
-    // Register this view for observation
-    [self addObserverIfNeeded:subview];
 }
 
 - (void)setSeparatorStyle:(UITableViewCellSeparatorStyle)separatorStyle {
     if (separatorStyle == UITableViewCellSeparatorStyleNone) {
-        // make sure there will be _UITableViewCellSeparatorView in cell's subViews
-        self.separatorColor = UIColor.clearColor;
+        // Make sure there will be _UITableViewCellSeparatorView in cell's subViews
+        self.separatorColor = [UIColor clearColor];
         self.realSeparatorStyle = UITableViewCellSeparatorStyleNone;
         return;
     }
+
     self.realSeparatorStyle = -1;
     [super setSeparatorStyle:UITableViewCellSeparatorStyleNone];
 }
 
 - (UITableViewCellSeparatorStyle)separatorStyle {
-    if (self.realSeparatorStyle > -1) {
-        return self.realSeparatorStyle;
-    }
-    return [super separatorStyle];
+    return self.realSeparatorStyle > -1 ? self.realSeparatorStyle : [super separatorStyle];
 }
 
 #pragma mark - Observer Life-cycle -
 
 - (void)addObserverIfNeeded:(UIView *)view {
-    // If the view had already been registered, exit out,
-    // otherwise a system exception will be thrown
-    if ([self.observedViews containsObject:view]) {
-        return;
+    if ([view isKindOfClass:[UIView class]] && ![self.observedViews containsObject:view]) {
+        [view addObserver:self forKeyPath:kInsetGroupedTableFrame options:0 context:nil];
+
+        if ([view isKindOfClass:[UITableViewCell class]]) {
+            [view addObserver:self forKeyPath:kInsetGroupedTableCell options:0 context:nil];
+        }
+
+        [self.observedViews addObject:view];
     }
-
-    // Register the view to observe its frame shape
-    [view addObserver:self forKeyPath:kTOInsetGroupedTableViewFrameKey options:0 context:nil];
-
-    // If it's a cell, register for when it's set as selected
-    // so we can round the corners then
-    if ([view isKindOfClass:[UITableViewCell class]]) {
-        [view addObserver:self forKeyPath:kTOInsetGroupedTableViewSelectedKey options:0 context:nil];
-    }
-
-    // Add it to the set
-    [self.observedViews addObject:view];
 }
 
 - (void)removeAllObservers {
-    // Loop through each object in the set, and de-register them
     for (UIView *view in self.observedViews) {
-        // Remove the frame observer
-        [view removeObserver:self forKeyPath:kTOInsetGroupedTableViewFrameKey context:nil];
+        [view removeObserver:self forKeyPath:kInsetGroupedTableFrame context:nil];
 
-        // If table cell, remove the selected observer
         if ([view isKindOfClass:[UITableViewCell class]]) {
-            [view removeObserver:self forKeyPath:kTOInsetGroupedTableViewSelectedKey context:nil];
+            [view removeObserver:self forKeyPath:kInsetGroupedTableCell context:nil];
         }
     }
 
-    // Clean out all of the views from the set
     [self.observedViews removeAllObjects];
 }
 
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-    // Double check this notification is about an object we care about
-    if ([object isKindOfClass:[UIView class]] == NO) { return; }
-    UIView *view = (UIView *)object;
-
-    // If the key was a frame observation, perform the inset
-    if ([keyPath isEqualToString:kTOInsetGroupedTableViewFrameKey]) {
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(UIView *)view change:(NSDictionary *)change context:(void *)context {
+    if ([keyPath isEqualToString:kInsetGroupedTableFrame]) {
         [self performInsetLayoutForView:view];
-    } else if ([keyPath isEqualToString:kTOInsetGroupedTableViewSelectedKey]) {
-        // If the key was the selection key, apply rounding
+    } else if ([keyPath isEqualToString:kInsetGroupedTableCell]) {
         [self applyRoundedCornersToTableViewCell:(UITableViewCell *)view];
     }
 }
@@ -141,19 +102,18 @@ static CGFloat const kTOInsetGroupedTableViewCornerRadius = 10.0f;
 #pragma mark - Behaviour Overrides -
 
 - (void)performInsetLayoutForView:(UIView *)view {
-    CGRect frame = view.frame;
+    CGRect frame = [view frame];
     UIEdgeInsets margins = self.layoutMargins;
     UIEdgeInsets safeAreaInsets = self.safeAreaInsets;
 
     // Calculate the left margin.
-    // If the margin on its own isn't larger than
-    // the safe area inset, combine the two.
+    // If the margin < the safe area inset, combine both
     CGFloat leftInset = margins.left;
     if (leftInset - safeAreaInsets.left < 0.0f - FLT_EPSILON) {
         leftInset += safeAreaInsets.left;
     }
 
-    // Calculate the right margin with the same logic.
+    // Calculate the right margin with the same logic
     CGFloat rightInset = margins.right;
     if (rightInset - safeAreaInsets.right < 0.0f - FLT_EPSILON) {
         rightInset += safeAreaInsets.right;
@@ -161,7 +121,7 @@ static CGFloat const kTOInsetGroupedTableViewCornerRadius = 10.0f;
 
     // Calculate offset and width off the insets
     frame.origin.x = leftInset;
-    frame.size.width = CGRectGetWidth(self.frame) - (leftInset + rightInset);
+    frame.size.width = CGRectGetWidth([self frame]) - (leftInset + rightInset);
 
     // Apply the new frame value to the underlying CALayer
     // to avoid triggering the KVO observer into an infinite loop
@@ -176,21 +136,17 @@ static CGFloat const kTOInsetGroupedTableViewCornerRadius = 10.0f;
     BOOL topRounded = NO;
     BOOL bottomRounded = NO;
 
-    // The maximum height a separator might be
-    CGFloat separatorHeight = 1.0f;
-
-    // Since the cell might still be not laid out yet
-    // (And the separators aren't in the right places)
-    // force a re-layout beforehand.
+    // Force a re-layout beforehand
     [cell setNeedsLayout];
     [cell layoutIfNeeded];
 
-    // Loop through each subview
     for (UIView *subview in cell.subviews) {
-        CGRect frame = subview.frame;
+        CGRect frame = [subview frame];
 
         // Separators will always be less than 1 point high
-        if (frame.size.height > separatorHeight) { continue; }
+        if (frame.size.height > 1.0f) {
+            continue;
+        }
 
         // If the X origin isn't 0, it's a separator we want to keep.
         // Since it may have been a border separator we hid before, un-hide it.
@@ -213,24 +169,19 @@ static CGFloat const kTOInsetGroupedTableViewCornerRadius = 10.0f;
     BOOL needsRounding = (topRounded || bottomRounded);
 
     // Set the corner radius as needed
-    cell.layer.cornerRadius = needsRounding ? kTOInsetGroupedTableViewCornerRadius : 0.0f;
+    cell.layer.cornerRadius = needsRounding ? 10.0f : 0.0f;
 
     // Set which corners need to be rounded depending on top or bottom
     NSUInteger cornerRoundingFlags = 0;
     if (topRounded) {
         cornerRoundingFlags |= (kCALayerMinXMinYCorner | kCALayerMaxXMinYCorner);
     }
+
     if (bottomRounded) {
         cornerRoundingFlags |= (kCALayerMinXMaxYCorner | kCALayerMaxXMaxYCorner);
     }
-    cell.layer.maskedCorners = cornerRoundingFlags;
-}
 
-- (void)layoutSubviews {
-    [super layoutSubviews];
-    
-    // Resize the table view to fit its superview
-    self.frame = self.superview.bounds;
+    cell.layer.maskedCorners = cornerRoundingFlags;
 }
 
 @end
