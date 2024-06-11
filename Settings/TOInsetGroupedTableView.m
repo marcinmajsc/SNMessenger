@@ -4,8 +4,8 @@
 
 #import "TOInsetGroupedTableView.h"
 
-static NSString * const kInsetGroupedTableFrame = @"frame";
-static NSString * const kInsetGroupedTableCell = @"cell";
+static NSString * const kTOInsetGroupedTableViewFrame = @"frame";
+static NSString * const kTOInsetGroupedTableCellSelected = @"selected";
 
 @implementation TOInsetGroupedTableView
 
@@ -69,10 +69,10 @@ static NSString * const kInsetGroupedTableCell = @"cell";
 
 - (void)addObserverIfNeeded:(UIView *)view {
     if ([view isKindOfClass:[UIView class]] && ![self.observedViews containsObject:view]) {
-        [view addObserver:self forKeyPath:kInsetGroupedTableFrame options:0 context:nil];
+        [view addObserver:self forKeyPath:kTOInsetGroupedTableViewFrame options:0 context:nil];
 
         if ([view isKindOfClass:[UITableViewCell class]]) {
-            [view addObserver:self forKeyPath:kInsetGroupedTableCell options:0 context:nil];
+            [view addObserver:self forKeyPath:kTOInsetGroupedTableCellSelected options:0 context:nil];
         }
 
         [self.observedViews addObject:view];
@@ -81,10 +81,10 @@ static NSString * const kInsetGroupedTableCell = @"cell";
 
 - (void)removeAllObservers {
     for (UIView *view in self.observedViews) {
-        [view removeObserver:self forKeyPath:kInsetGroupedTableFrame context:nil];
+        [view removeObserver:self forKeyPath:kTOInsetGroupedTableViewFrame context:nil];
 
         if ([view isKindOfClass:[UITableViewCell class]]) {
-            [view removeObserver:self forKeyPath:kInsetGroupedTableCell context:nil];
+            [view removeObserver:self forKeyPath:kTOInsetGroupedTableCellSelected context:nil];
         }
     }
 
@@ -92,9 +92,9 @@ static NSString * const kInsetGroupedTableCell = @"cell";
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(UIView *)view change:(NSDictionary *)change context:(void *)context {
-    if ([keyPath isEqualToString:kInsetGroupedTableFrame]) {
+    if ([keyPath isEqualToString:kTOInsetGroupedTableViewFrame]) {
         [self performInsetLayoutForView:view];
-    } else if ([keyPath isEqualToString:kInsetGroupedTableCell]) {
+    } else if ([keyPath isEqualToString:kTOInsetGroupedTableCellSelected]) {
         [self applyRoundedCornersToTableViewCell:(UITableViewCell *)view];
     }
 }
