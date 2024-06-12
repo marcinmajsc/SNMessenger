@@ -225,10 +225,14 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
 
 #pragma mark - Disable stories preview
 
-%hook MSGStoryCardVideoAutoPlayDelegate
+%hook MSGCQLResultSetList
 
-- (void)mediaViewController:(LSMediaViewController *)mediaController loadedWithContentView:(id)arg2 actualContentSize:(CGSize *)arg3 {
-    return disableStoriesPreview ? [mediaController reset] : %orig;
++ (instancetype)newWithIdentifier:(NSString *)identifier context:(MSGStoryCardToolbox *)context resultSet:(id)arg3 resultSetCount:(NSInteger)arg4 options:(void *)arg5 actionHandlers:(void *)arg6 impressionTrackingContext:(id)arg7 {
+    if ([identifier isEqualToString:@"stories"]) {
+        [context setValueForField:@"isVideoAutoplayEnabled", !disableStoriesPreview];
+    }
+
+    return %orig;
 }
 
 %end

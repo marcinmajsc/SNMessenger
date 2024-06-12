@@ -83,7 +83,7 @@ static inline UIColor *colorWithHexString(NSString *hexString) {
 
     CGFloat alpha, red, blue, green = 0.0f;
 
-    // #RGB
+    // #RGBA
     red   = colorComponentFrom(colorString, 1, 2);
     green = colorComponentFrom(colorString, 3, 2);
     blue  = colorComponentFrom(colorString, 5, 2);

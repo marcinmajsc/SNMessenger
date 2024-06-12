@@ -92,6 +92,7 @@
 
     SNCellModel *disableStoriesPreviewCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"DISABLE_STORIES_PREVIEW"];
     disableStoriesPreviewCell.prefKey = @"disableStoriesPreview";
+    disableStoriesPreviewCell.isRestartRequired = YES;
 
     SNCellModel *disableStorySeenReceiptsCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"DISABLE_STORY_SEEN_RECEIPTS"];
     disableStorySeenReceiptsCell.prefKey = @"disableStorySeenReceipts";

@@ -8,10 +8,6 @@
 @property (nonatomic, retain) UIBarButtonItem *settingsItem;
 @end
 
-@interface LSMediaViewController : UIViewController
-- (void)reset;
-@end
-
 @interface LSVideoPlayerView : UIView
 - (CMTime)duration;
 @end
@@ -221,4 +217,7 @@ typedef struct {
 
 @interface MSGInboxUnit : MSGModel
 - (MSGInboxUnitPositionInThreadList *)positionInThreadList;
+@end
+
+@interface MSGStoryCardToolbox : MSGModel
 @end

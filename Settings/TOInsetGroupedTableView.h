@@ -1,8 +1,7 @@
-// An iOS 12 back-port of the grouped inset table view style in iOS 13.
+// An iOS 12 version of Inset Grouped Table in iOS 13
 // Author: Timothy Oliver
 // Maintainer: NguyenASang
 
-#import <version.h>
 #import "Utilities.h"
 
 @interface TOInsetGroupedTableView : UITableView
