@@ -113,7 +113,7 @@ Class actionStandardClass;
 MSGModelInfo actionStandardInfo;
 
 Class actionTypeSaveClass;
-MSGModelInfo actionTypeSaveInfo = {"MSGStoryViewerOverflowMenuActionTypeSave", 0, nil, nil, YES};
+MSGModelInfo actionTypeSaveInfo = { "MSGStoryViewerOverflowMenuActionTypeSave", 0, nil, nil, YES };
 
 Class (*MSGModelDefineClass)(MSGModelInfo *);
 %hookf(Class, MSGModelDefineClass, MSGModelInfo *info) {
@@ -122,11 +122,6 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
         CASE ("MSGStoryOverlayProfileViewActionStandard") { // adtValueSubtype = 0
             actionStandardClass = modelClass;
             actionStandardInfo = *info;
-            break;
-        }
-
-        CASE ("MSGStoryViewerOverflowMenuActionTypeSave") { // adtValueSubtype = 2
-            actionTypeSaveClass = actionTypeSaveClass ?: modelClass;
             break;
         }
 
@@ -240,12 +235,12 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
 #pragma mark - Disable story seen receipt, disable story replay after reacting
 
 %hook LSStoryBucketViewController
-%property (nonatomic, assign) BOOL isMyStory;
+%property (nonatomic, assign) BOOL isSelfStory;
 %property (nonatomic, assign) CGFloat duration;
 
 - (void)startTimer {
-    self.isMyStory = [self.ownerId isEqualToString:[[%c(FBAnalytics) sharedAnalytics] userFBID]];
-    if (!disableStorySeenReceipts || self.isMyStory) {
+    self.isSelfStory = [self.ownerId isEqualToString:[[%c(FBAnalytics) sharedAnalytics] userFBID]];
+    if (!disableStorySeenReceipts || self.isSelfStory) {
         return %orig;
     }
 
@@ -258,7 +253,7 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
 }
 
 - (CGFloat)storyDuration {
-    return disableStorySeenReceipts && !self.isMyStory ? self.duration : %orig;
+    return disableStorySeenReceipts && !self.isSelfStory ? self.duration : %orig;
 }
 
 %new(d@:@)
@@ -341,7 +336,7 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
 
 - (BOOL)prefersStatusBarHidden {
     BOOL isCorrectController = [MSHookIvar<id>(self, "_contentController") isKindOfClass:%c(LSStoryViewerContentController)];
-    return hideStatusBarWhenViewingStory && isCorrectController && !isNotch() ? YES : %orig;
+    return hideStatusBarWhenViewingStory && isCorrectController ? YES : %orig;
 }
 
 %end
@@ -448,7 +443,7 @@ static BOOL hideTabBar = NO;
     NSMutableArray *actions = [MSHookIvar<NSArray *>(self, "_overflowActions") mutableCopy];
     NSString *storyAuthorId = MSHookIvar<NSString *>(self, "_storyAuthorId");
     if (canSaveFriendsStories && ![storyAuthorId isEqualToString:[[%c(FBAnalytics) sharedAnalytics] userFBID]] && [actions count] == 3) {
-        actionTypeSaveClass = actionTypeSaveClass ?: MSGModelDefineClass(&actionTypeSaveInfo);
+        actionTypeSaveClass = objc_lookUpClass("MSGStoryViewerOverflowMenuActionTypeSave") ?: MSGModelDefineClass(&actionTypeSaveInfo);
         MSGStoryViewerOverflowMenuActionTypeSave *actionTypeSave = [actionTypeSaveClass newADTModelWithInfo:&actionTypeSaveInfo adtValueSubtype:2];
 
         MSGStoryOverlayProfileViewActionStandard *actionStandard = [actionStandardClass newADTModelWithInfo:&actionStandardInfo adtValueSubtype:0];

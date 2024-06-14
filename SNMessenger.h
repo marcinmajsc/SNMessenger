@@ -136,7 +136,7 @@ typedef struct {
 @end
 
 @interface LSStoryBucketViewController : LSStoryBucketViewControllerBase
-@property (nonatomic, assign) BOOL isMyStory;
+@property (nonatomic, assign) BOOL isSelfStory;
 @property (nonatomic, assign) CGFloat duration;
 - (void)handleOverflowAction:(MSGModel *)arg1 storyId:(NSInteger)arg2 completion:(id)arg3;
 @end

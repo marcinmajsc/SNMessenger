@@ -3,7 +3,7 @@ Name: SNMessenger
 Depends: mobilesubstrate, firmware (>= 11.0)
 Version: 1.0.0
 Architecture: iphoneos-arm
-Description: The best tweak for Messenger app.
+Description: A full-featured tweak for Messenger.
 Maintainer: NguyenASang
 Author: NguyenASang
 Section: Tweaks

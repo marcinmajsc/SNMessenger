@@ -105,7 +105,7 @@
     SNCellModel *hideStatusBarWhenViewingStoryCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"HIDE_STATUS_BAR_WHEN_VIEWING_STORY"];
     hideStatusBarWhenViewingStoryCell.subtitleKey = @"HIDE_STATUS_BAR_WHEN_VIEWING_STORY_DESCRIPTION";
     hideStatusBarWhenViewingStoryCell.prefKey = @"hideStatusBarWhenViewingStory";
-    hideStatusBarWhenViewingStoryCell.disabled = isNotch();
+    hideStatusBarWhenViewingStoryCell.disabled = hasNotchOrDynamicIsland();
 
     SNCellModel *neverReplayStoryAfterReactingCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"NEVER_REPLAY_STORY_AFTER_REACTING"];
     neverReplayStoryAfterReactingCell.prefKey = @"neverReplayStoryAfterReacting";
