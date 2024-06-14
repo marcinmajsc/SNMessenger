@@ -5,7 +5,7 @@
 
 #define PREF_CHANGED_NOTIF "SNMessenger/prefChanged"
 
-static BOOL isDarkMode;
+extern BOOL isDarkMode;
 
 static inline NSBundle *SNMessengerBundle() {
     static NSBundle *bundle = nil;

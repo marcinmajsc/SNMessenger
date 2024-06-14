@@ -24,6 +24,8 @@ static BOOL hideSearchBar;
 static BOOL hideSuggestedContactsInSearch;
 static NSMutableDictionary *settings;
 
+BOOL isDarkMode = NO;
+
 static void reloadPrefs() {
     settings = getCurrentSettings();
 
