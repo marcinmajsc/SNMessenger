@@ -9,6 +9,7 @@
 
         self.textLabel.text = localizedStringForKey(cellData.labelKey);
         self.textLabel.textColor = colorWithHexString(isDarkMode ? @"#F2F2F2" : @"#333333");
+        self.textLabel.adjustsFontSizeToFitWidth = YES;
         self.detailTextLabel.font = [UIFont systemFontOfSize:12 weight:UIFontWeightRegular];
         self.detailTextLabel.text = localizedStringForKey(_cellData.subtitleKey);
         self.detailTextLabel.textColor = colorWithHexString(isDarkMode ? @"#888888" : @"#828282");

@@ -6,34 +6,10 @@
 #define PREF_CHANGED_NOTIF "SNMessenger/prefChanged"
 
 extern BOOL isDarkMode;
-
-static inline NSBundle *SNMessengerBundle() {
-    static NSBundle *bundle = nil;
-    static dispatch_once_t onceToken;
-	dispatch_once(&onceToken, ^{
-        NSString *tweakBundlePath = [[NSBundle mainBundle] pathForResource:@"SNMessenger" ofType:@"bundle"];
-        if (tweakBundlePath)
-            bundle = [NSBundle bundleWithPath:tweakBundlePath];
-        else
-            bundle = [NSBundle bundleWithPath:ROOT_PATH_NS(@"/Library/Application Support/SNMessenger.bundle")];
-    });
-    return bundle;
-}
+extern NSBundle *tweakBundle;
 
 static inline NSString *localizedStringForKey(NSString *key) {
-    return [SNMessengerBundle() localizedStringForKey:key value:nil table:nil];
-}
-
-static inline void showRequireRestartAlert(UIViewController *viewController) {
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:localizedStringForKey(@"RESTART_MESSAGE") message:localizedStringForKey(@"RESTART_CONFIRM_MESSAGE") preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:localizedStringForKey(@"CONFIRM") style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
-        exit(0);
-    }]];
-    [alert addAction:[UIAlertAction actionWithTitle:localizedStringForKey(@"CANCEL") style:UIAlertActionStyleCancel handler:^(UIAlertAction *action) {
-        [viewController dismissViewControllerAnimated:YES completion:nil];
-    }]];
-
-    [viewController presentViewController:alert animated:YES completion:nil];
+    return [tweakBundle localizedStringForKey:key value:nil table:nil];
 }
 
 static inline NSString *getSettingsPlistPath() {
@@ -62,7 +38,7 @@ static inline NSMutableDictionary *compareDictionaries(NSDictionary *oldDict, NS
 }
 
 static inline UIImage *getImage(NSString *name) {
-    NSString *path = [SNMessengerBundle() pathForResource:name ofType:@"png"];
+    NSString *path = [tweakBundle pathForResource:name ofType:@"png"];
     return [UIImage imageWithContentsOfFile:path];
 }
 

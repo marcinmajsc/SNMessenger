@@ -66,6 +66,7 @@
     disableLongPressToChangeThemeCell.prefKey = @"disableLongPressToChangeTheme";
 
     SNCellModel *disableReadReceiptsCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"DISABLE_READ_RECEIPTS"];
+    disableReadReceiptsCell.subtitleKey = @"DISABLE_READ_RECEIPTS_DESCRIPTION";
     disableReadReceiptsCell.prefKey = @"disableReadReceipts";
 
     SNCellModel *disableTypingIndicatorCell = [[SNCellModel alloc] initWithType:OptionsList labelKey:@"DISABLE_TYPING_INDICATOR"];
@@ -75,7 +76,6 @@
     disableTypingIndicatorCell.defaultValues = [@[@"NOWHERE"] mutableCopy];
 
     SNCellModel *hideNotifBadgesInChatCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"HIDE_NOTIF_BADGES_IN_CHAT"];
-    hideNotifBadgesInChatCell.subtitleKey = @"HIDE_NOTIF_BADGES_IN_CHAT_DESCRIPTION";
     hideNotifBadgesInChatCell.prefKey = @"hideNotifBadgesInChat";
 
     SNCellModel *keyboardStateAfterEnterChatCell = [[SNCellModel alloc] initWithType:OptionsList labelKey:@"KEYBOARD_STATE_AFTER_ENTER_CHAT"];
@@ -140,22 +140,13 @@
     sangNguyenCell.url = @"https://github.com/NguyenASang";
     sangNguyenCell.subtitleKey = @"NguyenASang";
 
-    //TODO: Create report template
-    SNCellModel *donationCell = [[SNCellModel alloc] initWithType:Link labelKey:@"DONATION"];
-    donationCell.url = @"";
-    donationCell.subtitleKey = @"BUY_ME_A_COFFEE";
-
-    SNCellModel *foundABugCell = [[SNCellModel alloc] initWithType:Link labelKey:@"FOUND_A_BUG"];
-    foundABugCell.url = @"";
-    foundABugCell.subtitleKey = @"LEAVE_A_BUG_REPORT_ON_GITHUB";
-
-    SNCellModel *featureRequestCell = [[SNCellModel alloc] initWithType:Link labelKey:@"FEATURE_REQUEST"];
-    featureRequestCell.url = @"";
-    featureRequestCell.subtitleKey = @"SUBMIT_YOUR_REQUEST_ON_GITHUB";
-
     SNCellModel *sourceCodeCell = [[SNCellModel alloc] initWithType:Link labelKey:@"SOURCE_CODE"];
     sourceCodeCell.url = @"https://github.com/NguyenASang/SNMessenger";
     sourceCodeCell.subtitleKey = @"Github";
+
+    SNCellModel *donationCell = [[SNCellModel alloc] initWithType:Link labelKey:@"DONATION"];
+    donationCell.url = @"https://paypal.me/nguyensang15";
+    donationCell.subtitleKey = @"BUY_ME_A_COFFEE";
 
     _tableData = @{
         @"0": @[
@@ -192,10 +183,8 @@
 
         @"4": @[
                 sangNguyenCell,
-                donationCell,
-                foundABugCell,
-                featureRequestCell,
-                sourceCodeCell
+                sourceCodeCell,
+                donationCell
             ]
     };
 }
@@ -283,6 +272,18 @@
     });
 }
 
+- (void)showRequireRestartAlert {
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:localizedStringForKey(@"RESTART_MESSAGE") message:localizedStringForKey(@"RESTART_CONFIRM_MESSAGE") preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:localizedStringForKey(@"CONFIRM") style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+        exit(0);
+    }]];
+    [alert addAction:[UIAlertAction actionWithTitle:localizedStringForKey(@"CANCEL") style:UIAlertActionStyleCancel handler:^(UIAlertAction *action) {
+        [self dismissViewControllerAnimated:YES completion:nil];
+    }]];
+
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
 - (void)close {
     NSDictionary *diffs = compareDictionaries(_originalSettings, getCurrentSettings());
     NSArray *diffKeys = [diffs allKeys];
@@ -291,7 +292,7 @@
     for (NSArray *modelsArray in tableValues) {
         for (SNCellModel *model in modelsArray) {
             if ([diffKeys containsObject:model.prefKey] && model.isRestartRequired) {
-                showRequireRestartAlert(self);
+                [self showRequireRestartAlert];
                 return;
             }
         }

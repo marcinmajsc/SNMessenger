@@ -25,6 +25,21 @@ static BOOL hideSuggestedContactsInSearch;
 static NSMutableDictionary *settings;
 
 BOOL isDarkMode = NO;
+NSBundle *tweakBundle = nil;
+
+static NSBundle *SNMessengerBundle() {
+    static NSBundle *bundle = nil;
+    static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+        NSString *tweakBundlePath = [[NSBundle mainBundle] pathForResource:@"SNMessenger" ofType:@"bundle"];
+        if (tweakBundlePath)
+            bundle = [NSBundle bundleWithPath:tweakBundlePath];
+        else
+            bundle = [NSBundle bundleWithPath:ROOT_PATH_NS(@"/Library/Application Support/SNMessenger.bundle")];
+    });
+
+    return bundle;
+}
 
 static void reloadPrefs() {
     settings = getCurrentSettings();
@@ -196,7 +211,7 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
 
 %end
 
-#pragma mark - Disable read receipts, hide notifications badge in back button in chat
+#pragma mark - Disable read receipts, Hide notification badges in back top bar
 
 %hook MSGThreadViewController
 
@@ -234,7 +249,7 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
 
 %end
 
-#pragma mark - Disable story seen receipt, disable story replay after reacting
+#pragma mark - Disable story seen receipt, Disable story replay after reacting
 
 %hook LSStoryBucketViewController
 %property (nonatomic, assign) BOOL isSelfStory;
@@ -399,7 +414,7 @@ static BOOL hideTabBar = NO;
 
 %end
 
-#pragma mark - Remove ads, hide notes row
+#pragma mark - Remove ads, Hide notes row
 
 %hook MSGThreadListDataSource
 
@@ -464,8 +479,11 @@ static BOOL hideTabBar = NO;
     CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)reloadPrefs, CFSTR(PREF_CHANGED_NOTIF), NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
     reloadPrefs();
 
+    // Get the tweak bundle
+    tweakBundle = SNMessengerBundle();
+
     // Thanks PoomSmart
-    NSString *frameworkPath = [NSString stringWithFormat:@"%@/Frameworks/LightSpeedCore.framework/LightSpeedCore", [NSBundle mainBundle].bundlePath];
+    NSString *frameworkPath = [NSString stringWithFormat:@"%@/Frameworks/LightSpeedCore.framework/LightSpeedCore", [[NSBundle mainBundle] bundlePath]];
     NSBundle *bundle = [NSBundle bundleWithPath:frameworkPath];
     if (!bundle.loaded) [bundle load];
     MSImageRef ref = MSGetImageByName([frameworkPath UTF8String]);
