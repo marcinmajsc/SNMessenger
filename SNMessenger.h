@@ -3,6 +3,10 @@
 #import "Utilities.h"
 #import "Settings/SNSettingsViewController.h"
 
+@interface NSThread (Debug)
++ (NSString *)ams_symbolicatedCallStackSymbols;
+@end
+
 @interface MDSNavigationController : UINavigationController
 @property (nonatomic, retain) UIBarButtonItem *eyeItem;
 @property (nonatomic, retain) UIBarButtonItem *settingsItem;

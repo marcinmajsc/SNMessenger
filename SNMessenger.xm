@@ -69,7 +69,7 @@ static void reloadPrefs() {
     hideSuggestedContactsInSearch = [[settings objectForKey:@"hideSuggestedContactsInSearch"] ?: @(NO) boolValue];
 }
 
-#pragma mark - Settings page, button to quickly disable/enable read receipts
+#pragma mark - Settings page, Quick toggle to disable/enable read receipts
 
 %hook MDSNavigationController
 %property (nonatomic, retain) UIBarButtonItem *eyeItem;
@@ -186,8 +186,10 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
             break;
         }
 
-        default:
+        default: {
+            //RLog(@"type: %lu", type);
             break;
+        }
     }
 
     va_end(args);
@@ -211,29 +213,16 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
 
 %end
 
-#pragma mark - Disable read receipts, Hide notification badges in back top bar
+#pragma mark - Disable read receipts
 
-%hook MSGThreadViewController
-
-- (instancetype)initWithMailbox:(id)arg1 threadQueryKey:(id)arg2 threadSessionLifecycle:(id)arg3 threadNavigationData:(id)arg4 navigationEntryPoint:(int)arg5 options:(MSGThreadViewControllerOptions *)options metricContextsContainer:(id)arg7 datasource:(id)arg8 {
-    MSGThreadViewOptions *viewOptions = [options viewOptions];
-
-    //TODO: Fake seen receipt
-    [viewOptions setValueForField:@"disableReadReceipts", disableReadReceipts];
-    [viewOptions setValueForField:@"shouldHideBadgeInBackButton", hideNotifBadgesInChat];
-
-    if (![keyboardStateAfterEnterChat isEqualToString:@"ADAPTIVE"]) {
-        [viewOptions setValueForField:@"onOpenKeyboardState", [keyboardStateAfterEnterChat isEqualToString:@"ALWAYS_EXPANDED"] ? 2 : 1];
+NSArray *(* MCFArrayCreateCopy)(NSMutableArray *);
+%hookf(NSArray *, MCFArrayCreateCopy, NSMutableArray *array) {
+    if ([array containsObject:@"tam_thread_mark_read"] && disableReadReceipts) {
+        [array replaceObjectAtIndex:0 withObject:@""];
     }
 
     return %orig;
 }
-
-- (void)messageListViewControllerDidLongPressBackground:(id)arg1 {
-    if (!disableLongPressToChangeChatTheme) %orig;
-}
-
-%end
 
 #pragma mark - Disable stories preview
 
@@ -333,6 +322,28 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
 
 %end
 
+#pragma mark - Hide notification badges in chat top bar, State of keyboard after entering chat, Disable long press to change theme
+
+%hook MSGThreadViewController
+
+- (instancetype)initWithMailbox:(id)arg1 threadQueryKey:(id)arg2 threadSessionLifecycle:(id)arg3 threadNavigationData:(id)arg4 navigationEntryPoint:(int)arg5 options:(MSGThreadViewControllerOptions *)options metricContextsContainer:(id)arg7 datasource:(id)arg8 {
+    MSGThreadViewOptions *viewOptions = [options viewOptions];
+
+    [viewOptions setValueForField:@"shouldHideBadgeInBackButton", hideNotifBadgesInChat];
+
+    if (![keyboardStateAfterEnterChat isEqualToString:@"ADAPTIVE"]) {
+        [viewOptions setValueForField:@"onOpenKeyboardState", [keyboardStateAfterEnterChat isEqualToString:@"ALWAYS_EXPANDED"] ? 2 : 1];
+    }
+
+    return %orig;
+}
+
+- (void)messageListViewControllerDidLongPressBackground:(id)arg1 {
+    if (!disableLongPressToChangeChatTheme) %orig;
+}
+
+%end
+
 #pragma mark - Hide search bar
 
 %hook UINavigationController
@@ -347,7 +358,7 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
 
 %end
 
-#pragma mark - Hide status bar when viewing story (notch-less only)
+#pragma mark - Hide status bar when viewing story (iOS 12 devices only)
 
 %hook LSMediaViewerViewController
 
@@ -487,6 +498,7 @@ static BOOL hideTabBar = NO;
     NSBundle *bundle = [NSBundle bundleWithPath:frameworkPath];
     if (!bundle.loaded) [bundle load];
     MSImageRef ref = MSGetImageByName([frameworkPath UTF8String]);
+    MCFArrayCreateCopy = (NSArray *(*)(NSMutableArray *))MSFindSymbol(ref, "_MCFArrayCreateCopy");
     MSGModelDefineClass = (Class (*)(MSGModelInfo *))MSFindSymbol(ref, "_MSGModelDefineClass");
 
     %init;

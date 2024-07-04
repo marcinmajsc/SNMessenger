@@ -66,7 +66,6 @@
     disableLongPressToChangeThemeCell.prefKey = @"disableLongPressToChangeTheme";
 
     SNCellModel *disableReadReceiptsCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"DISABLE_READ_RECEIPTS"];
-    disableReadReceiptsCell.subtitleKey = @"DISABLE_READ_RECEIPTS_DESCRIPTION";
     disableReadReceiptsCell.prefKey = @"disableReadReceipts";
 
     SNCellModel *disableTypingIndicatorCell = [[SNCellModel alloc] initWithType:OptionsList labelKey:@"DISABLE_TYPING_INDICATOR"];
@@ -103,9 +102,8 @@
     extendStoryVideoUploadLengthCell.prefKey = @"extendStoryVideoUploadLength";
 
     SNCellModel *hideStatusBarWhenViewingStoryCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"HIDE_STATUS_BAR_WHEN_VIEWING_STORY"];
-    hideStatusBarWhenViewingStoryCell.subtitleKey = @"HIDE_STATUS_BAR_WHEN_VIEWING_STORY_DESCRIPTION";
     hideStatusBarWhenViewingStoryCell.prefKey = @"hideStatusBarWhenViewingStory";
-    hideStatusBarWhenViewingStoryCell.disabled = hasNotchOrDynamicIsland();
+    hideStatusBarWhenViewingStoryCell.disabled = IS_IOS_OR_NEWER(iOS_13_0);
 
     SNCellModel *neverReplayStoryAfterReactingCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"NEVER_REPLAY_STORY_AFTER_REACTING"];
     neverReplayStoryAfterReactingCell.prefKey = @"neverReplayStoryAfterReacting";

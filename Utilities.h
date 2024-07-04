@@ -56,18 +56,18 @@ static inline CGFloat colorComponentFrom(NSString *string, NSUInteger start, NSU
 }
 
 static inline UIColor *colorWithHexString(NSString *hexString) {
-    NSString *colorString = [hexString uppercaseString];
-
     CGFloat alpha, red, blue, green = 0.0f;
 
     // #RGBA
-    red   = colorComponentFrom(colorString, 1, 2);
-    green = colorComponentFrom(colorString, 3, 2);
-    blue  = colorComponentFrom(colorString, 5, 2);
-    alpha = [hexString length] == 9 ? colorComponentFrom(colorString, 7, 2) : 1.0f;
+    red   = colorComponentFrom(hexString, 1, 2);
+    green = colorComponentFrom(hexString, 3, 2);
+    blue  = colorComponentFrom(hexString, 5, 2);
+    alpha = [hexString length] == 9 ? colorComponentFrom(hexString, 7, 2) : 1.0f;
 
     return [UIColor colorWithRed:red green:green blue:blue alpha:alpha];
 }
+
+/* Maybe useful later
 
 #pragma clang diagnostic ignored "-Wunguarded-availability-new" // THEOS should handle this by default
 #pragma clang diagnostic push
@@ -84,3 +84,5 @@ static inline BOOL hasNotchOrDynamicIsland() {
 }
 
 #pragma clang diagnostic pop
+
+*/

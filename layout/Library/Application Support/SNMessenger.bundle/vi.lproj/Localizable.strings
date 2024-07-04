@@ -12,7 +12,6 @@
 "ALWAYS_SEND_HD_PHOTOS" = "Luôn luôn gửi hình HD";
 "ALWAYS_SEND_HD_PHOTOS_DESCRIPTION" = "Chỉ khi nút HD hiện trong menu chọn ảnh";
 "DISABLE_READ_RECEIPTS" = "Chặn thông báo đã đọc";
-"DISABLE_READ_RECEIPTS_DESCRIPTION" = "Lỗi: không đánh dấu đã đọc";
 "DISABLE_LONG_PRESS_TO_CHANGE_THEME" = "Tắt nhấn giữ để thay đổi nền chat";
 "DISABLE_TYPING_INDICATOR" = "Tắt thông báo đang soạn tin nhắn";
 "DISABLE_TYPING_INDICATOR_TITLE" = "Tắt thông báo này ở";
@@ -33,7 +32,6 @@
 "EXTEND_STORY_VIDEO_UPLOAD_LENGTH" = "Tăng độ dài video đăng tin";
 "EXTEND_STORY_VIDEO_UPLOAD_LENGTH_DESCRIPTION" = "Lên đến 10 phút";
 "HIDE_STATUS_BAR_WHEN_VIEWING_STORY" = "Ẩn thanh trạng thái khi xem tin";
-"HIDE_STATUS_BAR_WHEN_VIEWING_STORY_DESCRIPTION" = "Cho các thiết bị không có Notch/Dynamic Island";
 "NEVER_REPLAY_STORY_AFTER_REACTING" = "Không lặp lại tin sau khi thả cảm xúc";
 "UI_OPTIONS" = "Cài đặt giao diện";
 "HIDE_CALLS_TAB" = "Ẩn tab cuộc gọi";
