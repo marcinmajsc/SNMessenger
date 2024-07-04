@@ -32,6 +32,7 @@
 "EXTEND_STORY_VIDEO_UPLOAD_LENGTH" = "Extend story video upload length";
 "EXTEND_STORY_VIDEO_UPLOAD_LENGTH_DESCRIPTION" = "Up to 10 minutes";
 "HIDE_STATUS_BAR_WHEN_VIEWING_STORY" = "Hide status bar when viewing story";
+"HIDE_STATUS_BAR_WHEN_VIEWING_STORY_DESCRIPTION" = "Only for iOS 12 devices";
 "NEVER_REPLAY_STORY_AFTER_REACTING" = "Never replay story after reacting";
 "UI_OPTIONS" = "UI options";
 "HIDE_CALLS_TAB" = "Hide calls tab";

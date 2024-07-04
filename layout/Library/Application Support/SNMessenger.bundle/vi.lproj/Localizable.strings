@@ -32,6 +32,7 @@
 "EXTEND_STORY_VIDEO_UPLOAD_LENGTH" = "Tăng độ dài video đăng tin";
 "EXTEND_STORY_VIDEO_UPLOAD_LENGTH_DESCRIPTION" = "Lên đến 10 phút";
 "HIDE_STATUS_BAR_WHEN_VIEWING_STORY" = "Ẩn thanh trạng thái khi xem tin";
+"HIDE_STATUS_BAR_WHEN_VIEWING_STORY_DESCRIPTION" = "Chỉ cho các thiết bị iOS 12";
 "NEVER_REPLAY_STORY_AFTER_REACTING" = "Không lặp lại tin sau khi thả cảm xúc";
 "UI_OPTIONS" = "Cài đặt giao diện";
 "HIDE_CALLS_TAB" = "Ẩn tab cuộc gọi";

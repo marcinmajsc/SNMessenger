@@ -102,6 +102,7 @@
     extendStoryVideoUploadLengthCell.prefKey = @"extendStoryVideoUploadLength";
 
     SNCellModel *hideStatusBarWhenViewingStoryCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"HIDE_STATUS_BAR_WHEN_VIEWING_STORY"];
+    hideStatusBarWhenViewingStoryCell.subtitleKey = @"HIDE_STATUS_BAR_WHEN_VIEWING_STORY_DESCRIPTION";
     hideStatusBarWhenViewingStoryCell.prefKey = @"hideStatusBarWhenViewingStory";
     hideStatusBarWhenViewingStoryCell.disabled = IS_IOS_OR_NEWER(iOS_13_0);
 
