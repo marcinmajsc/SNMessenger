@@ -7,6 +7,9 @@
 + (NSString *)ams_symbolicatedCallStackSymbols;
 @end
 
+@interface MSGInboxViewController : UIViewController
+@end
+
 @interface MDSNavigationController : UINavigationController
 @property (nonatomic, retain) UIBarButtonItem *eyeItem;
 @property (nonatomic, retain) UIBarButtonItem *settingsItem;
