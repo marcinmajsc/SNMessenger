@@ -358,17 +358,6 @@ NSArray *(* MCFArrayCreateCopy)(NSMutableArray *);
 
 %end
 
-%hook MDSNavigationController
-
-- (void)viewDidLoad {
-    %orig;
-    if (hideSearchBar) {
-        [self setNavigationBarHidden:YES animated:NO];
-    }
-}
-
-%end
-
 #pragma mark - Hide status bar when viewing story (iOS 12 devices only)
 
 %hook LSMediaViewerViewController
