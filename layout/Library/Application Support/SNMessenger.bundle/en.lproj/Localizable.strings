@@ -20,7 +20,7 @@
 "CHAT_SECTIONS_ONLY" = "Chat sections only";
 "BOTH" = "Both";
 "HIDE_NOTIF_BADGES_IN_CHAT" = "Hide notif badges in chat top bar";
-"KEYBOARD_STATE_AFTER_ENTER_CHAT" = "State of keyboard in chat";
+"KEYBOARD_STATE_AFTER_ENTER_CHAT" = "Keyboard state after entering chat";
 "KEYBOARD_STATE_AFTER_ENTER_CHAT_TITLE" = "States of keyboard";
 "ADAPTIVE" = "Adaptive";
 "ALWAYS_EXPANDED" = "Always expanded";

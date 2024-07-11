@@ -217,7 +217,7 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
 
 NSArray *(* MCFArrayCreateCopy)(NSMutableArray *);
 %hookf(NSArray *, MCFArrayCreateCopy, NSMutableArray *array) {
-    if ([array containsObject:@"tam_thread_mark_read"] && disableReadReceipts) {
+    if (disableReadReceipts && [array containsObject:@"tam_thread_mark_read"]) {
         [array replaceObjectAtIndex:0 withObject:@""];
     }
 
@@ -345,18 +345,6 @@ NSArray *(* MCFArrayCreateCopy)(NSMutableArray *);
 %end
 
 #pragma mark - Hide search bar
-
-%hook UINavigationController
-
-- (void)_createAndAttachSearchPaletteForTransitionToTopViewControllerIfNecesssary:(id)viewController {
-    if (hideSearchBar && [viewController isKindOfClass:%c(MSGInboxViewController)]) {
-        return;
-    }
-
-    %orig;
-}
-
-%end
 
 %hook MSGInboxViewController
 

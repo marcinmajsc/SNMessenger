@@ -66,23 +66,3 @@ static inline UIColor *colorWithHexString(NSString *hexString) {
 
     return [UIColor colorWithRed:red green:green blue:blue alpha:alpha];
 }
-
-/* Maybe useful later
-
-#pragma clang diagnostic ignored "-Wunguarded-availability-new" // THEOS should handle this by default
-#pragma clang diagnostic push
-
-static inline BOOL hasNotchOrDynamicIsland() {
-    UIWindow *keyWindow = [UIApplication sharedApplication].keyWindow;
-
-    if (IS_IOS_OR_NEWER(iOS_13_0)) {
-        UIWindowScene *windowScene = (UIWindowScene *)[[[UIApplication sharedApplication].connectedScenes allObjects] firstObject];
-        keyWindow = [windowScene.windows firstObject];
-    }
-
-    return keyWindow.safeAreaInsets.bottom > 0 || keyWindow.safeAreaInsets.top >= 51;
-}
-
-#pragma clang diagnostic pop
-
-*/

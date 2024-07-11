@@ -19,28 +19,15 @@
 - (CMTime)duration;
 @end
 
-@interface LSComposerView : UIView
-@end
-
 @interface LSContactListViewController : UIViewController
 @end
 
 @interface LSTabBarDataSource : NSObject
 @end
 
-@interface LSMediaViewerViewController : UIViewController
-- (void)updateStatusBarVisibility:(BOOL)visibility;
-@end
-
-@interface LSStoryOverlayViewController : UIViewController
-@end
-
 @interface FBAnalytics : NSObject
 + (instancetype)sharedAnalytics;
 - (NSString *)userFBID;
-@end
-
-@interface MDSTabBarController : UITabBarController
 @end
 
 @interface LSMediaPickerViewController : UIViewController
@@ -117,7 +104,7 @@ typedef struct {
 
 // A trick to use "case/switch" with string
 #define CASE(str) if (strcmp(__s__, str) == 0)
-#define SWITCH(s) for (const char *__s__ = (s); ; )
+#define SWITCH(s) for (const char *__s__ = (s) ; ; )
 #define DEFAULT
 
 @interface MSGModel : NSObject
@@ -135,6 +122,9 @@ typedef struct {
 @interface MSGStoryViewerOverflowMenuActionTypeSave : MSGModel
 @end
 
+@interface LSStoryOverlayProfileView : UIView
+@end
+
 @interface LSStoryBucketViewControllerBase : UIViewController
 @property (nonatomic, copy, readwrite) NSString *ownerId;
 - (CGFloat)getDurationFromPlayerView:(LSVideoPlayerView *)playerView;
@@ -145,20 +135,14 @@ typedef struct {
 @interface LSStoryBucketViewController : LSStoryBucketViewControllerBase
 @property (nonatomic, assign) BOOL isSelfStory;
 @property (nonatomic, assign) CGFloat duration;
-- (void)handleOverflowAction:(MSGModel *)arg1 storyId:(NSInteger)arg2 completion:(id)arg3;
 @end
 
 @interface MSGStoryViewerBucketModel : MSGModel
 - (int)bucketType;
-- (NSString *)ownerId;
 @end
 
 @interface MSGTempMessageListItemModel : NSObject
 - (NSString *)messageId;
-- (NSInteger)threadFbId;
-@end
-
-@interface LSStoryOverlayProfileView : UIView
 @end
 
 @interface MSGThreadListDataSource : NSObject
@@ -173,27 +157,11 @@ typedef struct {
 - (MDSTabBarItemProps *)props;
 @end
 
-@interface LSViewController : UIViewController
-@end
-
-@interface MSGInboxRowUnit : MSGModel
-- (LSViewController *)controller;
-@end
-
 @interface MSGThreadViewOptions : MSGModel
 @end
 
 @interface MSGThreadViewControllerOptions : MSGModel
 - (MSGThreadViewOptions *)viewOptions;
-@end
-
-@interface MSGThreadViewController : UIViewController
-@end
-
-@interface MSGStoryCardVideoAutoPlayDelegate : NSObject
-@end
-
-@interface LSStoryViewerContentController : NSObject
 @end
 
 @interface PLUIEditVideoViewController : UIViewController
@@ -207,15 +175,11 @@ typedef struct {
 @property (nonatomic, readonly, assign) CGFloat duration;
 @end
 
-@interface MSGThreadRowCell : UITableViewCell
-@end
-
 @interface MSGMessageListViewModelGenerator : NSObject
 @end
 
 @interface MSGThreadListUnitsSate : MSGModel
 - (NSMutableDictionary *)unitKeyToUnit;
-- (NSMutableDictionary *)unitKeyToViewControllerMap;
 @end
 
 @interface MSGInboxUnitPositionInThreadList : MSGModel
