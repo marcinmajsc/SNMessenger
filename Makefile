@@ -1,3 +1,7 @@
+ifeq ($(SCHEME), rootless)
+    THEOS_PACKAGE_SCHEME = rootless
+endif
+
 ARCHS = arm64 arm64e
 PACKAGE_VERSION = 1.0.0
 TARGET = iphone:clang:latest:12.4

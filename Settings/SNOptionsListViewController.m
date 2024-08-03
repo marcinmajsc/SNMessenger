@@ -44,6 +44,7 @@
     for (NSString *labelKey in _optionsListData.listOptions) {
         SNCellModel *model = [[SNCellModel alloc] initWithType:Option labelKey:labelKey];
         model.prefKey = _optionsListData.prefKey;
+        model.defaultValue = _optionsListData.defaultValue;
         [_tableData addObject:model];
     }
 }

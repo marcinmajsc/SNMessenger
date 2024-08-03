@@ -48,19 +48,19 @@
     SNCellModel *noAdsCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"NO_ADS"];
     noAdsCell.subtitleKey = @"NO_ADS_DESCRIPTION";
     noAdsCell.prefKey = @"noAds";
-    noAdsCell.defaultValue = YES;
+    noAdsCell.defaultValue = @(YES);
 
     SNCellModel *showTheEyeCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"SHOW_THE_EYE_BUTTON"];
     showTheEyeCell.subtitleKey = @"QUICK_ENABLE_DISABLE_READ_RECEIPT";
     showTheEyeCell.prefKey = @"showTheEyeButton";
-    showTheEyeCell.defaultValue = YES;
+    showTheEyeCell.defaultValue = @(YES);
 
     //========================== CHAT OPTIONS ==========================//
 
     SNCellModel *alwaysSendHdPhotosCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"ALWAYS_SEND_HD_PHOTOS"];
     alwaysSendHdPhotosCell.subtitleKey = @"ALWAYS_SEND_HD_PHOTOS_DESCRIPTION";
     alwaysSendHdPhotosCell.prefKey = @"alwaysSendHdPhotos";
-    alwaysSendHdPhotosCell.defaultValue = YES;
+    alwaysSendHdPhotosCell.defaultValue = @(YES);
 
     SNCellModel *disableLongPressToChangeThemeCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"DISABLE_LONG_PRESS_TO_CHANGE_THEME"];
     disableLongPressToChangeThemeCell.prefKey = @"disableLongPressToChangeTheme";
@@ -72,7 +72,7 @@
     disableTypingIndicatorCell.prefKey = @"disableTypingIndicator";
     disableTypingIndicatorCell.titleKey = @"DISABLE_TYPING_INDICATOR_TITLE";
     disableTypingIndicatorCell.listOptions = @[@"NOWHERE", @"INBOX_ONLY", @"CHAT_SECTIONS_ONLY", @"BOTH"];
-    disableTypingIndicatorCell.defaultValues = [@[@"NOWHERE"] mutableCopy];
+    disableTypingIndicatorCell.defaultValue = @"NOWHERE";
 
     SNCellModel *hideNotifBadgesInChatCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"HIDE_NOTIF_BADGES_IN_CHAT"];
     hideNotifBadgesInChatCell.prefKey = @"hideNotifBadgesInChat";
@@ -81,13 +81,13 @@
     keyboardStateAfterEnterChatCell.prefKey = @"keyboardStateAfterEnterChat";
     keyboardStateAfterEnterChatCell.titleKey = @"KEYBOARD_STATE_AFTER_ENTER_CHAT_TITLE";
     keyboardStateAfterEnterChatCell.listOptions = @[@"ADAPTIVE", @"ALWAYS_EXPANDED", @"ALWAYS_COLLAPSED"];
-    keyboardStateAfterEnterChatCell.defaultValues = [@[@"ADAPTIVE"] mutableCopy];
+    keyboardStateAfterEnterChatCell.defaultValue = @"ADAPTIVE";
 
     //========================= STORY OPTIONS ==========================//
 
     SNCellModel *canSaveFriendsStoriesCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"CAN_SAVE_FRIENDS_STORIES"];
     canSaveFriendsStoriesCell.prefKey = @"canSaveFriendsStories";
-    canSaveFriendsStoriesCell.defaultValue = YES;
+    canSaveFriendsStoriesCell.defaultValue = @(YES);
 
     SNCellModel *disableStoriesPreviewCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"DISABLE_STORIES_PREVIEW"];
     disableStoriesPreviewCell.prefKey = @"disableStoriesPreview";
@@ -95,11 +95,12 @@
 
     SNCellModel *disableStorySeenReceiptsCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"DISABLE_STORY_SEEN_RECEIPTS"];
     disableStorySeenReceiptsCell.prefKey = @"disableStorySeenReceipts";
-    disableStorySeenReceiptsCell.defaultValue = YES;
+    disableStorySeenReceiptsCell.defaultValue = @(YES);
 
     SNCellModel *extendStoryVideoUploadLengthCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"EXTEND_STORY_VIDEO_UPLOAD_LENGTH"];
     extendStoryVideoUploadLengthCell.subtitleKey = @"EXTEND_STORY_VIDEO_UPLOAD_LENGTH_DESCRIPTION";
     extendStoryVideoUploadLengthCell.prefKey = @"extendStoryVideoUploadLength";
+    extendStoryVideoUploadLengthCell.defaultValue = @(YES);
 
     SNCellModel *hideStatusBarWhenViewingStoryCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"HIDE_STATUS_BAR_WHEN_VIEWING_STORY"];
     hideStatusBarWhenViewingStoryCell.subtitleKey = @"HIDE_STATUS_BAR_WHEN_VIEWING_STORY_DESCRIPTION";
@@ -259,7 +260,7 @@
         [app openURL:[NSURL URLWithString:cellData.url] options:@{} completionHandler:nil];
     }
 
-    if (cellData.type == Button || cellData.type == OptionsList) {
+    if (cellData.type == OptionsList) {
         SEL selector = cellData.buttonAction;
         IMP imp = [self methodForSelector:selector];
         void (*func)(id, SEL) = (void *)imp;

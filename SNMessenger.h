@@ -34,17 +34,17 @@
 - (void)_stopHDAnimationAndToggleHD;
 @end
 
-//============   TYPE LOOKUP TABLE   =============//
-//                                                //
-//   0: Bool                    7: Weak Object    //
-//   1: (Unsigned) Int32        8: MCFTypeRef     //
-//   2: (Unsigned) Int64        9: CGRect         //
-//   3: Double                 10: CGSize         //
-//   4: Float                  11: CGPoint        //
-//   5: Struct                 12: NSRange        //
-//   6: Strong Object          13: UIEdgeInsets   //
-//                                                //
-//================================================//
+//==========  TYPE LOOKUP TABLE (NEW)  ==========||==========  TYPE LOOKUP TABLE (OLD)  ==========//
+//                                               ||                                               //
+//   0: Bool                   7: MCFTypeRef     ||   0: Bool                   7: Weak Object    //
+//   1: (Unsigned) Int32       8: CGRect         ||   1: (Unsigned) Int32       8: MCFTypeRef     //
+//   2: (Unsigned) Int64       9: CGSize         ||   2: (Unsigned) Int64       9: CGRect         //
+//   3: Double                10: CGPoint        ||   3: Double                10: CGSize         //
+//   4: Float                 11: NSRange        ||   4: Float                 11: CGPoint        //
+//   5: Strong Object         12: UIEdgeInsets   ||   5: Struct                12: NSRange        //
+//   6: Weak Object                              ||   6: Strong Object         13: UIEdgeInsets   //
+//                                               ||                                               //
+//===============================================||===============================================//
 
 typedef struct {
     NSString *field_0;
@@ -91,7 +91,7 @@ typedef struct {
     const char *encoding_10;
     NSUInteger sizeof_10;
     NSUInteger type_10;
-// ... (up to 90 fields)
+//  ...
 } MSGModelFieldInfo;
 
 typedef struct {
@@ -100,7 +100,13 @@ typedef struct {
     MSGModelFieldInfo *fieldInfo;
     struct MSGCQLResultSetInfo *resultSet;
     BOOL var4;
+    void *var5;
 } MSGModelInfo;
+
+typedef struct {
+    const char *name;
+    NSInteger subtype;
+} MSGModelADTInfo;
 
 // A trick to use "case/switch" with string
 #define CASE(str) if (strcmp(__s__, str) == 0)
@@ -108,7 +114,8 @@ typedef struct {
 #define DEFAULT
 
 @interface MSGModel : NSObject
-+ (instancetype)newADTModelWithInfo:(MSGModelInfo *)info adtValueSubtype:(NSInteger)adtValueSubtype;
++ (instancetype)newADTModelWithInfo:(MSGModelInfo *)info adtInfo:(MSGModelADTInfo *)adtInfo;
++ (instancetype)newADTModelWithInfo:(MSGModelInfo *)info adtValueSubtype:(NSInteger)adtValueSubtype; // v458.0.0
 + (instancetype)newWithModelInfo:(MSGModelInfo *)info; // adtValueSubtype = -1
 - (void)setBoolValue:(BOOL)value forFieldIndex:(NSUInteger)index;
 - (void)setInt64Value:(NSInteger)value forFieldIndex:(NSUInteger)index;

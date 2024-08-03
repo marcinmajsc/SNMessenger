@@ -50,14 +50,14 @@ static void reloadPrefs() {
     alwaysSendHdPhotos = [[settings objectForKey:@"alwaysSendHdPhotos"] ?: @(YES) boolValue];
     disableReadReceipts = [[settings objectForKey:@"disableReadReceipts"] ?: @(NO) boolValue];
     disableLongPressToChangeChatTheme = [[settings objectForKey:@"disableLongPressToChangeTheme"] ?: @(NO) boolValue];
-    disableTypingIndicator = [[settings objectForKey:@"disableTypingIndicator"] ?: @[@"NOWHERE"] firstObject];
+    disableTypingIndicator = [settings objectForKey:@"disableTypingIndicator"] ?: @"NOWHERE";
     hideNotifBadgesInChat = [[settings objectForKey:@"hideNotifBadgesInChat"] ?: @(NO) boolValue];
-    keyboardStateAfterEnterChat = [[settings objectForKey:@"keyboardStateAfterEnterChat"] ?: @[@"ADAPTIVE"] firstObject];
+    keyboardStateAfterEnterChat = [settings objectForKey:@"keyboardStateAfterEnterChat"] ?: @"ADAPTIVE";
 
     canSaveFriendsStories = [[settings objectForKey:@"canSaveFriendsStories"] ?: @(YES) boolValue];
     disableStoriesPreview = [[settings objectForKey:@"disableStoriesPreview"] ?: @(NO) boolValue];
     disableStorySeenReceipts = [[settings objectForKey:@"disableStorySeenReceipts"] ?: @(YES) boolValue];
-    extendStoryVideoUploadLength = [[settings objectForKey:@"extendStoryVideoUploadLength"] ?: @(NO) boolValue];
+    extendStoryVideoUploadLength = [[settings objectForKey:@"extendStoryVideoUploadLength"] ?: @(YES) boolValue];
     hideStatusBarWhenViewingStory = [[settings objectForKey:@"hideStatusBarWhenViewingStory"] ?: @(YES) boolValue];
     neverReplayStoryAfterReacting = [[settings objectForKey:@"neverReplayStoryAfterReacting"] ?: @(NO) boolValue];
 
@@ -69,7 +69,7 @@ static void reloadPrefs() {
     hideSuggestedContactsInSearch = [[settings objectForKey:@"hideSuggestedContactsInSearch"] ?: @(NO) boolValue];
 }
 
-#pragma mark - Settings page, Quick toggle to disable/enable read receipts
+#pragma mark - Settings page | Quick toggle to disable/enable read receipts
 
 %hook MDSNavigationController
 %property (nonatomic, retain) UIBarButtonItem *eyeItem;
@@ -85,7 +85,7 @@ static void reloadPrefs() {
         self.settingsItem.style = UIBarButtonItemStyleDone;
 
         @try {
-            self.navigationBar.topItem.leftBarButtonItems = @[self.navigationBar.topItem.customLeftItem, self.settingsItem];
+            self.navigationBar.topItem.leftBarButtonItems = @[self.navigationBar.topItem.leftBarButtonItem, self.settingsItem];
         } @catch (id ex) {
             self.navigationBar.topItem.leftBarButtonItem = self.settingsItem;
         }
@@ -99,7 +99,7 @@ static void reloadPrefs() {
         self.eyeItem = [[UIBarButtonItem alloc] initWithCustomView:eyeButton];
         self.eyeItem.style = UIBarButtonItemStyleDone;
 
-        self.navigationBar.topItem.rightBarButtonItems = @[self.navigationBar.topItem.customRightItem, self.eyeItem];
+        self.navigationBar.topItem.rightBarButtonItems = @[self.navigationBar.topItem.rightBarButtonItem, self.eyeItem];
     }
 
     %orig;
@@ -128,18 +128,25 @@ static void reloadPrefs() {
 
 Class actionStandardClass;
 MSGModelInfo actionStandardInfo;
+MSGModelADTInfo actionStandardADTInfo = { "MSGStoryOverlayProfileViewAction", 0 };
 
 Class actionTypeSaveClass;
 MSGModelInfo actionTypeSaveInfo = { "MSGStoryViewerOverflowMenuActionTypeSave", 0, nil, nil, YES };
+MSGModelADTInfo actionTypeSaveADTInfo = { "MSGStoryViewerOverflowMenuActionType", 2 };
 
-Class (*MSGModelDefineClass)(MSGModelInfo *);
+Class (* MSGModelDefineClass)(MSGModelInfo *);
 %hookf(Class, MSGModelDefineClass, MSGModelInfo *info) {
     Class modelClass = %orig;
+
     SWITCH (info->name) {
-        CASE ("MSGStoryOverlayProfileViewActionStandard") { // adtValueSubtype = 0
+        CASE ("MSGStoryOverlayProfileViewActionStandard") {
             actionStandardClass = modelClass;
             actionStandardInfo = *info;
             break;
+        }
+
+        CASE ("MSGStoryViewerOverflowMenuActionTypeSave") {
+            return objc_lookUpClass("MSGStoryViewerOverflowMenuActionTypeSave") ?: modelClass;
         }
 
         DEFAULT {
@@ -170,25 +177,49 @@ Class (*MSGModelDefineClass)(MSGModelInfo *);
     va_list args;
     va_start(args, name);
 
-    switch (type) {
-        case 0: {
-            [self setBoolValue:(BOOL)va_arg(args, int) forFieldIndex:index];
-            break;
-        }
+    if (IS_IOS_OR_NEWER(iOS_15_1)) {
+        switch (type) {
+            case 0: {
+                [self setBoolValue:(BOOL)va_arg(args, int) forFieldIndex:index];
+                break;
+            }
 
-        case 2: {
-            [self setInt64Value:va_arg(args, NSInteger) forFieldIndex:index];
-            break;
-        }
+            case 2: {
+                [self setInt64Value:va_arg(args, NSInteger) forFieldIndex:index];
+                break;
+            }
 
-        case 6: {
-            [self setObjectValue:va_arg(args, id) forFieldIndex:index];
-            break;
-        }
+            case 5: {
+                [self setObjectValue:va_arg(args, id) forFieldIndex:index];
+                break;
+            }
 
-        default: {
-            //RLog(@"type: %lu", type);
-            break;
+            default: {
+                //RLog(@"model: %@ | field: %@ | type: %lu | encoding: %s", self, name, type, *(&info->fieldInfo->field_0 + offset + 0x1));
+                break;
+            }
+        }
+    } else { // v458.0.0
+        switch (type) {
+            case 0: {
+                [self setBoolValue:(BOOL)va_arg(args, int) forFieldIndex:index];
+                break;
+            }
+
+            case 2: {
+                [self setInt64Value:va_arg(args, NSInteger) forFieldIndex:index];
+                break;
+            }
+
+            case 6: {
+                [self setObjectValue:va_arg(args, id) forFieldIndex:index];
+                break;
+            }
+
+            default: {
+                //RLog(@"model: %@ | field: %@ | type: %lu | encoding: %s", self, name, type, *(&info->fieldInfo->field_0 + offset + 0x1));
+                break;
+            }
         }
     }
 
@@ -238,7 +269,7 @@ NSArray *(* MCFArrayCreateCopy)(NSMutableArray *);
 
 %end
 
-#pragma mark - Disable story seen receipt, Disable story replay after reacting
+#pragma mark - Disable story seen receipt | Disable story replay after reacting
 
 %hook LSStoryBucketViewController
 %property (nonatomic, assign) BOOL isSelfStory;
@@ -291,7 +322,16 @@ NSArray *(* MCFArrayCreateCopy)(NSMutableArray *);
 
 %hook MSGMessageListViewModelGenerator
 
+// v458.0.0
 - (void)didLoadThreadModel:(id)arg1 threadViewModelMap:(id)arg2 threadSessionIdentifier:(id)arg3 messageModels:(NSMutableArray <MSGTempMessageListItemModel *> *)models threadParticipants:(id)arg5 attributionIDV2:(id)arg6 loadMoreStateOlder:(int)arg7 loadMoreStateNewer:(int)arg8 didLoadNewIsland:(BOOL)arg9 completion:(id)arg10 {
+    if ([@[@"INBOX_ONLY", @"BOTH"] containsObject:disableTypingIndicator] && [[[models lastObject] messageId] isEqualToString:@"typing_indicator"]) {
+        [models removeLastObject];
+    }
+
+    %orig;
+}
+
+- (void)didLoadThreadModel:(id)arg1 threadViewModelMap:(id)arg2 threadSessionIdentifier:(id)arg3 messageModels:(NSMutableArray <MSGTempMessageListItemModel *> *)models threadParticipants:(id)arg5 attributionIDV2:(id)arg6 loadMoreStateOlder:(int)arg7 loadMoreStateNewer:(int)arg8 didLoadNewIsland:(BOOL)arg9 modelFetchedTimeInSeconds:(CGFloat)arg10 completion:(id)arg11 {
     if ([@[@"INBOX_ONLY", @"BOTH"] containsObject:disableTypingIndicator] && [[[models lastObject] messageId] isEqualToString:@"typing_indicator"]) {
         [models removeLastObject];
     }
@@ -322,7 +362,7 @@ NSArray *(* MCFArrayCreateCopy)(NSMutableArray *);
 
 %end
 
-#pragma mark - Hide notification badges in chat top bar, State of keyboard after entering chat, Disable long press to change theme
+#pragma mark - Hide notification badges in chat top bar | Keyboard state after entering chat | Disable long press to change theme
 
 %hook MSGThreadViewController
 
@@ -332,7 +372,11 @@ NSArray *(* MCFArrayCreateCopy)(NSMutableArray *);
     [viewOptions setValueForField:@"shouldHideBadgeInBackButton", hideNotifBadgesInChat];
 
     if (![keyboardStateAfterEnterChat isEqualToString:@"ADAPTIVE"]) {
-        [viewOptions setValueForField:@"onOpenKeyboardState", [keyboardStateAfterEnterChat isEqualToString:@"ALWAYS_EXPANDED"] ? 2 : 1];
+        if (IS_IOS_OR_NEWER(iOS_15_1)) {
+            [viewOptions setValueForField:@"onOpenKeyboardState", [keyboardStateAfterEnterChat isEqualToString:@"ALWAYS_EXPANDED"] ? 1 : 3];
+        } else { // v458.0.0
+            [viewOptions setValueForField:@"onOpenKeyboardState", [keyboardStateAfterEnterChat isEqualToString:@"ALWAYS_EXPANDED"] ? 2 : 1];
+        }
     }
 
     return %orig;
@@ -424,7 +468,7 @@ static BOOL hideTabBar = NO;
 
 %end
 
-#pragma mark - Remove ads, Hide notes row
+#pragma mark - Remove ads | Hide notes row
 
 %hook MSGThreadListDataSource
 
@@ -470,12 +514,19 @@ static BOOL hideTabBar = NO;
     NSMutableArray *actions = [MSHookIvar<NSArray *>(self, "_overflowActions") mutableCopy];
     NSString *storyAuthorId = MSHookIvar<NSString *>(self, "_storyAuthorId");
     if (canSaveFriendsStories && ![storyAuthorId isEqualToString:[[%c(FBAnalytics) sharedAnalytics] userFBID]] && [actions count] == 3) {
-        actionTypeSaveClass = objc_lookUpClass("MSGStoryViewerOverflowMenuActionTypeSave") ?: MSGModelDefineClass(&actionTypeSaveInfo);
-        MSGStoryViewerOverflowMenuActionTypeSave *actionTypeSave = [actionTypeSaveClass newADTModelWithInfo:&actionTypeSaveInfo adtValueSubtype:2];
+        actionTypeSaveClass = MSGModelDefineClass(&actionTypeSaveInfo);
+        MSGStoryViewerOverflowMenuActionTypeSave *actionTypeSave = nil;
+        MSGStoryOverlayProfileViewActionStandard *actionStandard = nil;
 
-        MSGStoryOverlayProfileViewActionStandard *actionStandard = [actionStandardClass newADTModelWithInfo:&actionStandardInfo adtValueSubtype:0];
+        if (IS_IOS_OR_NEWER(iOS_15_1)) {
+            actionTypeSave = [actionTypeSaveClass newADTModelWithInfo:&actionTypeSaveInfo adtInfo:&actionTypeSaveADTInfo];
+            actionStandard = [actionStandardClass newADTModelWithInfo:&actionStandardInfo adtInfo:&actionStandardADTInfo];
+        } else { // v458.0.0
+            actionTypeSave = [actionTypeSaveClass newADTModelWithInfo:&actionTypeSaveInfo adtValueSubtype:actionTypeSaveADTInfo.subtype];
+            actionStandard = [actionStandardClass newADTModelWithInfo:&actionStandardInfo adtValueSubtype:actionStandardADTInfo.subtype];
+        }
+
         [actionStandard setValueForField:@"type", actionTypeSave];
-
         [actions insertObject:actionStandard atIndex:2];
         [self setValue:actions forKey:@"_overflowActions"];
     }

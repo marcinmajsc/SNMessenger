@@ -1,11 +1,10 @@
 #import "Utilities.h"
 
 typedef NS_ENUM(NSUInteger, CellType) {
-    Switch,
-    Button,
     Link,
+    Option,
     OptionsList,
-    Option
+    Switch,
 };
 
 @interface SNCellModel : NSObject
@@ -14,13 +13,11 @@ typedef NS_ENUM(NSUInteger, CellType) {
 @property (nonatomic, retain) NSString *labelKey;
 @property (nonatomic, retain) NSString *subtitleKey;
 @property (nonatomic, retain) NSString *url;
-@property (nonatomic, assign) BOOL defaultValue;
+@property (nonatomic, retain) NSString *titleKey;
+@property (nonatomic, retain) NSArray *listOptions;
+@property (nonatomic, assign) SEL buttonAction;
+@property (nonatomic, assign) id defaultValue;
 @property (nonatomic, assign) BOOL isRestartRequired;
 @property (nonatomic, assign) BOOL disabled;
-@property (nonatomic, assign) SEL buttonAction;
-@property (nonatomic, retain) NSString *titleKey; // only for OptionsList type
-@property (nonatomic, retain) NSArray *listOptions; // only for OptionsList type
-@property (nonatomic, retain) NSMutableArray *defaultValues; // only for OptionsList type
-@property (nonatomic, assign) BOOL isMultipleChoices; // only for OptionsList type
 - (instancetype)initWithType:(CellType)type labelKey:(NSString *)labelKey;
 @end
