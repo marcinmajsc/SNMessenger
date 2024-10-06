@@ -25,18 +25,19 @@
 
 NSString *(^typeLookup)(const char *, NSUInteger, BOOL) = ^NSString *(const char *encoding, NSUInteger type, BOOL isMethod) {
     SwitchStr (encoding) {
-        CaseEqual ("B") { return isMethod ? @"bool" : @"Bool"; }
-        CaseEqual ("i") { return isMethod ? @"int32" : @"Int"; }
-        CaseEqual ("I") { return isMethod ? @"int32" : @"Unsigned Int32"; }
-        CaseEqual ("q") { return isMethod ? @"int64" : @"Int64"; }
-        CaseEqual ("Q") { return isMethod ? @"int64" : @"Unsigned Int64"; }
+        CaseEqual ("B") { return isMethod ? @"bool"   : @"Bool"; }
+        CaseEqual ("i") { return isMethod ? @"int32"  : @"Int"; }
+        CaseEqual ("I") { return isMethod ? @"int32"  : @"Unsigned Int32"; }
+        CaseEqual ("q") { return isMethod ? @"int64"  : @"Int64"; }
+        CaseEqual ("Q") { return isMethod ? @"int64"  : @"Unsigned Int64"; }
         CaseEqual ("d") { return isMethod ? @"double" : @"Double"; }
-        CaseEqual ("f") { return isMethod ? @"float" : @"Float"; }
+        CaseEqual ("f") { return isMethod ? @"float"  : @"Float"; }
+        CaseEqual (":") { return isMethod ? @"sel"    : @"Selector"; }
 
         CaseEqual ("@") {
             if (type < 8) {
                 switch (type - !IS_IOS_OR_NEWER(iOS_15_1)) {
-                    case 5: return isMethod ? @"object" : @"Strong Object";
+                    case 5: return isMethod ? @"object"     : @"Strong Object";
                     case 6: return isMethod ? @"weakObject" : @"Weak Object";
                 }
             }
