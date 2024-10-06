@@ -35,13 +35,13 @@
 "HIDE_STATUS_BAR_WHEN_VIEWING_STORY_DESCRIPTION" = "Only for iOS 12 devices";
 "NEVER_REPLAY_STORY_AFTER_REACTING" = "Never replay story after reacting";
 "UI_OPTIONS" = "UI options";
-"HIDE_CALLS_TAB" = "Hide calls tab";
-"HIDE_PEOPLE_TAB" = "Hide people tab";
 "HIDE_STORIES_TAB" = "Hide stories tab";
 "HIDE_NOTES_ROW" = "Hide notes row";
 "HIDE_SEARCH_BAR" = "Hide search bar";
 "HIDE_SUGGESTED_CONTACTS_IN_SEARCH" = "Hide suggested contacts in search";
 "SUPPORT_ME" = "Support me";
-"SOURCE_CODE" = "Source code 🤖";
-"DONATION" = "Donation 💰";
+"AUTHOR_DESCRIPTION" = "Developer of this tweak";
+"SUPPORTER_DESCRIPTION" = "Who helped me a lot!";
+"SOURCE_CODE" = "Source code";
+"DONATION" = "Donation";
 "BUY_ME_A_COFFEE" = "Buy me a coffee ☕";

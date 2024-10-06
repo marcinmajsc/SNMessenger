@@ -1,11 +1,13 @@
-ifeq ($(SCHEME), rootless)
-    THEOS_PACKAGE_SCHEME = rootless
-endif
-
-ARCHS = arm64 arm64e
-PACKAGE_VERSION = 1.0.0
-TARGET = iphone:clang:latest:12.4
 INSTALL_TARGET_PROCESSES = Messenger
+PACKAGE_VERSION = 1.0.0
+ARCHS = arm64 arm64e
+
+ifeq ($(ROOTLESS), 1)
+    THEOS_PACKAGE_SCHEME = rootless
+    TARGET = iphone:clang:latest:15.0
+else
+    TARGET = iphone:clang:latest:12.4
+endif
 
 include $(THEOS)/makefiles/common.mk
 

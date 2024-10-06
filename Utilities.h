@@ -46,6 +46,15 @@ static inline UIImage *getTemplateImage(NSString *name) {
     return [getImage(name) imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
 }
 
+static inline UIImage *scaleImageWithSize(UIImage *image, CGSize size) {
+    if (!image) return nil;
+    UIGraphicsBeginImageContextWithOptions(size, NO, UIScreen.mainScreen.scale);
+    [image drawInRect:CGRectMake(0, 0, size.width, size.height)];
+    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return newImage;
+}
+
 static inline CGFloat colorComponentFrom(NSString *string, NSUInteger start, NSUInteger length) {
     NSString *substring = [string substringWithRange:NSMakeRange(start, length)];
     NSString *fullHex = length == 2 ? substring : [NSString stringWithFormat: @"%@%@", substring, substring];
@@ -56,13 +65,10 @@ static inline CGFloat colorComponentFrom(NSString *string, NSUInteger start, NSU
 }
 
 static inline UIColor *colorWithHexString(NSString *hexString) {
-    CGFloat alpha, red, blue, green = 0.0f;
+    CGFloat Red   = colorComponentFrom(hexString, 1, 2);
+    CGFloat Green = colorComponentFrom(hexString, 3, 2);
+    CGFloat Blue  = colorComponentFrom(hexString, 5, 2);
+    CGFloat Alpha = [hexString length] == 9 ? colorComponentFrom(hexString, 7, 2) : 1.0f;
 
-    // #RGBA
-    red   = colorComponentFrom(hexString, 1, 2);
-    green = colorComponentFrom(hexString, 3, 2);
-    blue  = colorComponentFrom(hexString, 5, 2);
-    alpha = [hexString length] == 9 ? colorComponentFrom(hexString, 7, 2) : 1.0f;
-
-    return [UIColor colorWithRed:red green:green blue:blue alpha:alpha];
+    return [UIColor colorWithRed:Red green:Green blue:Blue alpha:Alpha];
 }

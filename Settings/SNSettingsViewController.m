@@ -67,6 +67,7 @@
 
     SNCellModel *disableReadReceiptsCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"DISABLE_READ_RECEIPTS"];
     disableReadReceiptsCell.prefKey = @"disableReadReceipts";
+    disableReadReceiptsCell.defaultValue = @(YES);
 
     SNCellModel *disableTypingIndicatorCell = [[SNCellModel alloc] initWithType:OptionsList labelKey:@"DISABLE_TYPING_INDICATOR"];
     disableTypingIndicatorCell.prefKey = @"disableTypingIndicator";
@@ -112,14 +113,6 @@
 
     //=========================== UI OPTIONS ===========================//
 
-    SNCellModel *hideCallsTabCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"HIDE_CALLS_TAB"];
-    hideCallsTabCell.prefKey = @"hideCallsTab";
-    hideCallsTabCell.isRestartRequired = YES;
-
-    SNCellModel *hidePeopleTabCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"HIDE_PEOPLE_TAB"];
-    hidePeopleTabCell.prefKey = @"hidePeopleTab";
-    hidePeopleTabCell.isRestartRequired = YES;
-
     SNCellModel *hideStoriesTabCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"HIDE_STORIES_TAB"];
     hideStoriesTabCell.prefKey = @"hideStoriesTab";
     hideStoriesTabCell.isRestartRequired = YES;
@@ -136,17 +129,25 @@
 
     //=========================== SUPPORT ME ===========================//
 
-    SNCellModel *sangNguyenCell = [[SNCellModel alloc] initWithType:Link labelKey:@"Nguyễn Anh Sáng 👨🏻‍💻"];
-    sangNguyenCell.url = @"https://github.com/NguyenASang";
-    sangNguyenCell.subtitleKey = @"NguyenASang";
+    SNCellModel *authorCell = [[SNCellModel alloc] initWithType:Link labelKey:@"Nguyễn Anh Sáng"];
+    authorCell.url = @"https://github.com/NguyenASang";
+    authorCell.subtitleKey = @"AUTHOR_DESCRIPTION";
+    authorCell.image = getImage(@"Author");
+
+    SNCellModel *supporterCell = [[SNCellModel alloc] initWithType:Link labelKey:@"Thatchapon Unprasert"];
+    supporterCell.url = @"https://github.com/PoomSmart";
+    supporterCell.subtitleKey = @"SUPPORTER_DESCRIPTION";
+    supporterCell.image = getImage(@"Supporter");
 
     SNCellModel *sourceCodeCell = [[SNCellModel alloc] initWithType:Link labelKey:@"SOURCE_CODE"];
     sourceCodeCell.url = @"https://github.com/NguyenASang/SNMessenger";
     sourceCodeCell.subtitleKey = @"Github";
+    sourceCodeCell.image = getImage(@"GitHub");
 
     SNCellModel *donationCell = [[SNCellModel alloc] initWithType:Link labelKey:@"DONATION"];
     donationCell.url = @"https://paypal.me/nguyensang15";
     donationCell.subtitleKey = @"BUY_ME_A_COFFEE";
+    donationCell.image = getImage(@"PayPal");
 
     _tableData = @{
         @"0": @[
@@ -173,8 +174,6 @@
             ],
 
         @"3": @[
-                hideCallsTabCell,
-                hidePeopleTabCell,
                 hideStoriesTabCell,
                 hideNotesRowCell,
                 hideSearchBarCell,
@@ -182,7 +181,8 @@
             ],
 
         @"4": @[
-                sangNguyenCell,
+                authorCell,
+                supporterCell,
                 sourceCodeCell,
                 donationCell
             ]

@@ -15,6 +15,10 @@
         self.detailTextLabel.font = [UIFont systemFontOfSize:12 weight:UIFontWeightRegular];
         self.detailTextLabel.textColor = colorWithHexString(isDarkMode ? @"#888888" : @"#828282");
 
+        self.imageView.image = scaleImageWithSize(cellData.image, CGSizeMake(42, 42));
+        self.imageView.layer.cornerRadius = 21.0f;
+        self.imageView.clipsToBounds = YES;
+
         if (cellData.disabled) {
             self.userInteractionEnabled = NO;
             self.textLabel.enabled = NO;
@@ -34,7 +38,7 @@
             case OptionsList: {
                 UIImageView *indicatorView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 16, 24)];
                 indicatorView.tintColor = colorWithHexString(isDarkMode ? @"#ffffff30" : @"#00000033");
-                indicatorView.image = getTemplateImage(@"arrow@3x");
+                indicatorView.image = getTemplateImage(@"Arrow@3x");
                 self.accessoryView = indicatorView;
 
                 _cellData.buttonAction = @selector(pushViewControllerWithOptionsList);
@@ -90,7 +94,7 @@
 
     UIImageView *indicatorView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 24, 24)];
     indicatorView.tintColor = colorWithHexString(isDarkMode ? @"#429AFF" : @"#0A7CFF");
-    indicatorView.image = getTemplateImage(@"tick@3x");
+    indicatorView.image = getTemplateImage(@"Tick@3x");
 
     self.accessoryView = [value isEqualToString:_cellData.labelKey] ? indicatorView : nil;
 }

@@ -1,50 +1,80 @@
 #import <AVKit/AVKit.h>
-#import <stdarg.h>
 #import "Utilities.h"
-#import "Settings/SNSettingsViewController.h"
 
 @interface NSThread (Debug)
 + (NSString *)ams_symbolicatedCallStackSymbols;
 @end
 
-@interface MSGInboxViewController : UIViewController
-@end
-
-@interface MDSNavigationController : UINavigationController
-@property (nonatomic, retain) UIBarButtonItem *eyeItem;
-@property (nonatomic, retain) UIBarButtonItem *settingsItem;
-@end
-
-@interface LSVideoPlayerView : UIView
-- (CMTime)duration;
-@end
-
-@interface LSContactListViewController : UIViewController
-@end
-
-@interface LSTabBarDataSource : NSObject
-@end
-
-@interface FBAnalytics : NSObject
-+ (instancetype)sharedAnalytics;
-- (NSString *)userFBID;
-@end
-
-@interface LSMediaPickerViewController : UIViewController
-- (void)_stopHDAnimationAndToggleHD;
-@end
+// A trick to use "case/switch" with string
+#define SwitchStr(s) for (const char *__s__ = (s) ; ; )
+#define CaseEqual(str) if (strcmp(str, __s__) == 0)
+#define CaseStart(str) if (strncmp(str, __s__, strlen(str)) == 0)
+#define Default
 
 //==========  TYPE LOOKUP TABLE (NEW)  ==========||==========  TYPE LOOKUP TABLE (OLD)  ==========//
 //                                               ||                                               //
 //   0: Bool                   7: MCFTypeRef     ||   0: Bool                   7: Weak Object    //
-//   1: (Unsigned) Int32       8: CGRect         ||   1: (Unsigned) Int32       8: MCFTypeRef     //
-//   2: (Unsigned) Int64       9: CGSize         ||   2: (Unsigned) Int64       9: CGRect         //
-//   3: Double                10: CGPoint        ||   3: Double                10: CGSize         //
-//   4: Float                 11: NSRange        ||   4: Float                 11: CGPoint        //
-//   5: Strong Object         12: UIEdgeInsets   ||   5: Struct                12: NSRange        //
-//   6: Weak Object                              ||   6: Strong Object         13: UIEdgeInsets   //
+//   1: (Unsigned) Int32       8: SEL            ||   1: (Unsigned) Int32       8: MCFTypeRef     //
+//   2: (Unsigned) Int64       9: CGRect         ||   2: (Unsigned) Int64       9: CGRect         //
+//   3: Double                10: CGSize         ||   3: Double                10: CGSize         //
+//   4: Float                 11: CGPoint        ||   4: Float                 11: CGPoint        //
+//   5: Strong Object         12: NSRange        ||   5: Struct                12: NSRange        //
+//   6: Weak Object           13: UIEdgeInsets   ||   6: Strong Object         13: UIEdgeInsets   //
 //                                               ||                                               //
 //===============================================||===============================================//
+
+NSString *(^typeLookup)(const char *, NSUInteger, BOOL) = ^NSString *(const char *encoding, NSUInteger type, BOOL isMethod) {
+    SwitchStr (encoding) {
+        CaseEqual ("B") { return isMethod ? @"bool" : @"Bool"; }
+        CaseEqual ("i") { return isMethod ? @"int32" : @"Int"; }
+        CaseEqual ("I") { return isMethod ? @"int32" : @"Unsigned Int32"; }
+        CaseEqual ("q") { return isMethod ? @"int64" : @"Int64"; }
+        CaseEqual ("Q") { return isMethod ? @"int64" : @"Unsigned Int64"; }
+        CaseEqual ("d") { return isMethod ? @"double" : @"Double"; }
+        CaseEqual ("f") { return isMethod ? @"float" : @"Float"; }
+
+        CaseEqual ("@") {
+            if (type < 8) {
+                switch (type - !IS_IOS_OR_NEWER(iOS_15_1)) {
+                    case 5: return isMethod ? @"object" : @"Strong Object";
+                    case 6: return isMethod ? @"weakObject" : @"Weak Object";
+                }
+            }
+
+            switch (type) {
+                case  9: return @"CGRect";
+                case 10: return @"CGSize";
+                case 11: return @"CGPoint";
+                case 12: return @"NSRange";
+                case 13: return @"UIEdgeInsets";
+                default: break;
+            }
+        }
+
+        CaseStart ("^{") {
+            switch (type) {
+                case 5: return isMethod ? @"struct" : @"Struct"; // v458.0.0
+
+                case 7:
+                case 8: {
+                    return isMethod ? @"mcfTypeRef" : @"MCFTypeRef";
+                }
+
+                default: break;
+            }
+        }
+
+        Default {
+            RLog(@"encoding: %s | type: %lu", encoding, type);
+            return @"";
+        }
+    }
+};
+
+template<typename T> T getValue(id self, IMP imp, SEL selector, NSUInteger index) {
+    T (* func)(id, SEL, NSUInteger) = (T (*)(id, SEL, NSUInteger))imp;
+    return func(self, selector, index);
+}
 
 typedef struct {
     NSString *field_0;
@@ -108,11 +138,6 @@ typedef struct {
     NSInteger subtype;
 } MSGModelADTInfo;
 
-// A trick to use "case/switch" with string
-#define CASE(str) if (strcmp(__s__, str) == 0)
-#define SWITCH(s) for (const char *__s__ = (s) ; ; )
-#define DEFAULT
-
 @interface MSGModel : NSObject
 + (instancetype)newADTModelWithInfo:(MSGModelInfo *)info adtInfo:(MSGModelADTInfo *)adtInfo;
 + (instancetype)newADTModelWithInfo:(MSGModelInfo *)info adtValueSubtype:(NSInteger)adtValueSubtype; // v458.0.0
@@ -121,6 +146,34 @@ typedef struct {
 - (void)setInt64Value:(NSInteger)value forFieldIndex:(NSUInteger)index;
 - (void)setObjectValue:(id)value forFieldIndex:(NSUInteger)index;
 - (void)setValueForField:(NSString *)name, /* value: */ ...;
+- (id)valueAtFieldIndex:(NSUInteger)index;
+@end
+
+@interface MSGInboxViewController : UIViewController
+@end
+
+@interface MDSNavigationController : UINavigationController
+@property (nonatomic, retain) UIBarButtonItem *eyeItem;
+@property (nonatomic, retain) UIBarButtonItem *settingsItem;
+@end
+
+@interface LSVideoPlayerView : UIView
+- (CMTime)duration;
+@end
+
+@interface LSContactListViewController : UIViewController
+@end
+
+@interface LSTabBarDataSource : NSObject
+@end
+
+@interface FBAnalytics : NSObject
++ (instancetype)sharedAnalytics;
+- (NSString *)userFBID;
+@end
+
+@interface LSMediaPickerViewController : UIViewController
+- (void)_stopHDAnimationAndToggleHD;
 @end
 
 @interface MSGStoryOverlayProfileViewActionStandard : MSGModel
@@ -154,14 +207,6 @@ typedef struct {
 
 @interface MSGThreadListDataSource : NSObject
 - (BOOL)isInitializationComplete;
-@end
-
-@interface MDSTabBarItemProps : MSGModel
-- (NSString *)accessibilityIdentifierText;
-@end
-
-@interface MSGTabBarItemInfo : MSGModel
-- (MDSTabBarItemProps *)props;
 @end
 
 @interface MSGThreadViewOptions : MSGModel
@@ -198,4 +243,15 @@ typedef struct {
 @end
 
 @interface MSGStoryCardToolbox : MSGModel
+@end
+
+@interface MBIAuthDataContext : NSObject
+@end
+
+typedef struct {
+    const char *key;
+    const char *subKey;
+} MSGCSessionedMobileConfig;
+
+@interface MDSTabBarController : UITabBarController
 @end

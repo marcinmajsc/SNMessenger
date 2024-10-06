@@ -12,6 +12,7 @@ typedef NS_ENUM(NSUInteger, CellType) {
 @property (nonatomic, retain) NSString *prefKey;
 @property (nonatomic, retain) NSString *labelKey;
 @property (nonatomic, retain) NSString *subtitleKey;
+@property (nonatomic, retain) UIImage *image;
 @property (nonatomic, retain) NSString *url;
 @property (nonatomic, retain) NSString *titleKey;
 @property (nonatomic, retain) NSArray *listOptions;

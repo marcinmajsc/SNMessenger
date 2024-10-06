@@ -35,13 +35,13 @@
 "HIDE_STATUS_BAR_WHEN_VIEWING_STORY_DESCRIPTION" = "Chỉ cho các thiết bị iOS 12";
 "NEVER_REPLAY_STORY_AFTER_REACTING" = "Không lặp lại tin sau khi thả cảm xúc";
 "UI_OPTIONS" = "Cài đặt giao diện";
-"HIDE_CALLS_TAB" = "Ẩn tab cuộc gọi";
-"HIDE_PEOPLE_TAB" = "Ẩn tab danh bạ";
 "HIDE_STORIES_TAB" = "Ẩn tab tin";
 "HIDE_NOTES_ROW" = "Ẩn mục ghi chú";
 "HIDE_SEARCH_BAR" = "Ẩn thanh tìm kiếm";
 "HIDE_SUGGESTED_CONTACTS_IN_SEARCH" = "Ẩn gợi ý liên lạc trong phần tìm kiếm";
 "SUPPORT_ME" = "Hỗ trợ tôi";
-"SOURCE_CODE" = "Mã nguồn 🤖";
-"DONATION" = "Ủng hộ 💰";
+"AUTHOR_DESCRIPTION" = "Nhà phát triển của tinh chỉnh này";
+"SUPPORTER_DESCRIPTION" = "Người đã giúp đỡ tôi rất nhiều!";
+"SOURCE_CODE" = "Mã nguồn";
+"DONATION" = "Ủng hộ";
 "BUY_ME_A_COFFEE" = "Tặng tôi 1 ly cà phê ☕";
