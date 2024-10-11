@@ -243,7 +243,7 @@ Class (* MSGModelDefineClass)(MSGModelInfo *);
 }
 
 %new(@@:)
-- (NSMutableDictionary *)debugModel {
+- (NSMutableDictionary *)debugMSGModel {
     MSGModelInfo *modelInfo = MSHookIvar<MSGModelInfo *>(self, "_modelInfo");
     NSMutableDictionary *debugInfo = [@{} mutableCopy];
     NSInteger index = 0, offset = 0x0;
