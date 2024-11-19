@@ -1,3 +1,4 @@
+#import <CydiaSubstrate.h>
 #import <UIKit/UIKit.h>
 #import <RemoteLog.h> // For debugging
 #import <rootless.h>
@@ -7,6 +8,13 @@
 
 extern BOOL isDarkMode;
 extern NSBundle *tweakBundle;
+
+static inline MSImageRef getImageRef(NSString *framework) {
+    NSString *frameworkPath = [NSString stringWithFormat:@"%@/Frameworks/%@", [[NSBundle mainBundle] bundlePath], framework];
+    NSBundle *bundle = [NSBundle bundleWithPath:frameworkPath];
+    if (!bundle.loaded) [bundle load];
+    return MSGetImageByName([frameworkPath UTF8String]);
+}
 
 static inline CGFloat MessengerVersion() {
     NSString *version = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];

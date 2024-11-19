@@ -655,17 +655,8 @@ static BOOL hideTabBar = NO;
     // Get the tweak bundle
     tweakBundle = SNMessengerBundle();
 
-    NSString *LightSpeedEngine = @"LightSpeedEngine.framework/LightSpeedEngine";
-    NSString *LSEnginePath = [NSString stringWithFormat:@"%@/Frameworks/%@", [[NSBundle mainBundle] bundlePath], LightSpeedEngine];
-    NSBundle *LSEngineBundle = [NSBundle bundleWithPath:LSEnginePath];
-    if (!LSEngineBundle.loaded) [LSEngineBundle load];
-    MSImageRef LSEngineRef = MSGetImageByName([LSEnginePath UTF8String]);
-
-    NSString *LightSpeedCore = @"LightSpeedCore.framework/LightSpeedCore";
-    NSString *LSCorePath = [NSString stringWithFormat:@"%@/Frameworks/%@", [[NSBundle mainBundle] bundlePath], LightSpeedCore];
-    NSBundle *LSCoreBundle = [NSBundle bundleWithPath:LSCorePath];
-    if (!LSCoreBundle.loaded) [LSCoreBundle load];
-    MSImageRef LSCoreRef = MSGetImageByName([LSCorePath UTF8String]);
+    MSImageRef LSEngineRef = getImageRef(@"LightSpeedEngine.framework/LightSpeedEngine");
+    MSImageRef LSCoreRef = getImageRef(@"LightSpeedCore.framework/LightSpeedCore");
 
     if (MessengerVersion() > 458.0) {
         LSRTCValidateCallIntentForKey = (id (*)(NSString *, id, LSRTCCallIntentValidatorParams *))MSFindSymbol(LSCoreRef, "_LSRTCValidateCallIntentForKey");
