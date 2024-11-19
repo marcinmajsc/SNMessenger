@@ -6,6 +6,7 @@
 static BOOL noAds;
 static BOOL showTheEyeButton;
 static BOOL alwaysSendHdPhotos;
+static BOOL callConfirmation;
 static BOOL disableLongPressToChangeChatTheme;
 static BOOL disableReadReceipts;
 static NSString *disableTypingIndicator;
@@ -17,6 +18,7 @@ static BOOL disableStorySeenReceipts;
 static BOOL extendStoryVideoUploadLength;
 static BOOL hideStatusBarWhenViewingStory;
 static BOOL neverReplayStoryAfterReacting;
+static BOOL hidePeopleTab;
 static BOOL hideStoriesTab;
 static BOOL hideNotesRow;
 static BOOL hideSearchBar;
@@ -47,6 +49,7 @@ static void reloadPrefs() {
     showTheEyeButton = [[settings objectForKey:@"showTheEyeButton"] ?: @(YES) boolValue];
 
     alwaysSendHdPhotos = [[settings objectForKey:@"alwaysSendHdPhotos"] ?: @(YES) boolValue];
+    callConfirmation = [[settings objectForKey:@"callConfirmation"] ?: @(YES) boolValue];
     disableReadReceipts = [[settings objectForKey:@"disableReadReceipts"] ?: @(YES) boolValue];
     disableLongPressToChangeChatTheme = [[settings objectForKey:@"disableLongPressToChangeTheme"] ?: @(NO) boolValue];
     disableTypingIndicator = [settings objectForKey:@"disableTypingIndicator"] ?: @"NOWHERE";
@@ -60,6 +63,7 @@ static void reloadPrefs() {
     hideStatusBarWhenViewingStory = [[settings objectForKey:@"hideStatusBarWhenViewingStory"] ?: @(YES) boolValue];
     neverReplayStoryAfterReacting = [[settings objectForKey:@"neverReplayStoryAfterReacting"] ?: @(NO) boolValue];
 
+    hidePeopleTab = [[settings objectForKey:@"hidePeopleTab"] ?: @(NO) boolValue];
     hideStoriesTab = [[settings objectForKey:@"hideStoriesTab"] ?: @(NO) boolValue];
     hideNotesRow = [[settings objectForKey:@"hideNotesRow"] ?: @(NO) boolValue];
     hideSearchBar = [[settings objectForKey:@"hideSearchBar"] ?: @(NO) boolValue];
@@ -187,8 +191,8 @@ Class (* MSGModelDefineClass)(MSGModelInfo *);
             break;
         }
 
-        case 5 ... 8: {
-            switch (type - !IS_IOS_OR_NEWER(iOS_15_1)) {
+        case 5 ... 6: {
+            switch (type - (MessengerVersion() <= 458.0)) {
                 case 5: [self setObjectValue:va_arg(args, id) forFieldIndex:index];
                 default: break;
             }
@@ -208,34 +212,30 @@ Class (* MSGModelDefineClass)(MSGModelInfo *);
 %new(@@:Q)
 - (id)valueAtFieldIndex:(NSUInteger)index {
     MSGModelInfo *modelInfo = MSHookIvar<MSGModelInfo *>(self, "_modelInfo");
-    NSUInteger type = (*(&modelInfo->fieldInfo->type_0 + 0x4 * index)) % 256;
-    const char *encoding = *(&modelInfo->fieldInfo->encoding_0 + 0x4 * index);
+    NSUInteger type = *(&modelInfo->fieldInfo->type_0 + 0x4 * index) % 256;
+    MSGModelTypes value = MSHookIvar<MSGModelTypes>(self, "_fieldValues");
 
     if (index >= modelInfo->numberOfFields) return @"Out of fields.";
-    SEL selector = NSSelectorFromString([NSString stringWithFormat:@"%@ValueAtFieldIndex:", typeLookup(encoding, type, YES)]);
-    IMP imp = [self methodForSelector:selector];
 
     switch (type) {
-        case  0: return @(getValue<BOOL>(self, imp, selector, index));
-        case  1: return @(getValue<int>(self, imp, selector, index));
-        case  2: return @(getValue<NSInteger>(self, imp, selector, index));
-        case  3: return @(getValue<CGFloat>(self, imp, selector, index));
-        case  4: return @(getValue<float>(self, imp, selector, index));
+        case 0: return @(get<bool>(value[index]));
+        case 1: return @(get<int>(value[index]));
+        case 2: return @(get<long long>(value[index]));
+        case 3: return @(get<double>(value[index]));
+        case 4: return @(get<float>(value[index]));
 
-        case  5 ... 8: {
-            switch (type - !IS_IOS_OR_NEWER(iOS_15_1)) {
-                case 4: return [NSValue valueWithPointer:getValue<void *>(self, imp, selector, index)];
-                case 5 ... 7: return getValue<id>(self, imp, selector, index);
-                case 8: return NSStringFromSelector(getValue<SEL>(self, imp, selector, index));
+        case 5 ... 8: {
+            switch (type - (MessengerVersion() <= 458.0)) {
+                case 4: return [NSValue valueWithPointer:get<void *>(value[index])]; // Struct in v458.0.0
+                case 5: return get<id>(value[index]);
+                case 6: return [get<MSGModelWeakObjectContainer *>(value[index]) value];
+                case 7: return (__bridge id)get<void *>(value[index]);
+                case 8: return NSStringFromSelector(*get<SEL *>(value[index]));
                 default: break;
             }
         }
 
-        case  9: return [NSValue valueWithCGRect:getValue<CGRect>(self, imp, selector, index)];
-        case 10: return [NSValue valueWithCGSize:getValue<CGSize>(self, imp, selector, index)];
-        case 11: return [NSValue valueWithCGPoint:getValue<CGPoint>(self, imp, selector, index)];
-        case 12: return [NSValue valueWithRange:getValue<NSRange>(self, imp, selector, index)];
-        case 13: return [NSValue valueWithUIEdgeInsets:getValue<UIEdgeInsets>(self, imp, selector, index)];
+        case 9 ... 13: return get<id>(value[index]);
         default: break;
     }
 
@@ -258,7 +258,7 @@ Class (* MSGModelDefineClass)(MSGModelInfo *);
             @"index": @(index),
             @"name" : name,
             @"size" : @(size),
-            @"type" : [NSString stringWithFormat:@"type: %lu - %@ (%s)", type, typeLookup(encoding, type, NO), encoding],
+            @"type" : [NSString stringWithFormat:@"type: %lu - %@ (%s)", type, typeLookup(encoding, type), encoding],
             @"value": [self valueAtFieldIndex:index] ?: [NSNull null]
         };
         [debugInfo setValue:info forKey:[NSString stringWithFormat:@"%lu - %@", index, name]];
@@ -276,19 +276,66 @@ Class (* MSGModelDefineClass)(MSGModelInfo *);
 
 %hook LSMediaPickerViewController
 
-- (void)_stopHDAnimationAndToggleHD {
-    if (alwaysSendHdPhotos && [MSHookIvar<NSMutableArray *>(self, "_selectedAssets") count]) return;
-    %orig;
-}
-
 - (BOOL)collectionView:(id)arg1 shouldSelectItemAtIndexPath:(id)arg2 {
-    if (alwaysSendHdPhotos) [self _stopHDAnimationAndToggleHD];
+    UIButton *hdToggleButton = MSHookIvar<UIButton *>(self, "_hdToggleButton");
+    if (alwaysSendHdPhotos && [hdToggleButton state] == 0) {
+        [self _stopHDAnimationAndToggleHD];
+    }
+
     return %orig;
 }
 
 %end
 
+#pragma mark - Audio / Video call confirmation
+
+%hook MSGNavigationCoordinator_LSNavigationCoordinatorProxy
+
+%new(v@:@?)
+- (void)presentAlertWithCompletion:(void (^)(BOOL confirmed))completion {
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:localizedStringForKey(@"CALL_CONFIRMATION_TITLE") message:localizedStringForKey(@"CALL_CONFIRMATION_MESSAGE") preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:localizedStringForKey(@"CONFIRM") style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+        completion(YES);
+    }]];
+
+    [alert addAction:[UIAlertAction actionWithTitle:localizedStringForKey(@"CANCEL") style:UIAlertActionStyleCancel handler:^(UIAlertAction *action) {
+        completion(NO);
+    }]];
+
+    [self presentViewController:alert presentationStyle:UIModalPresentationNone animated:YES completion:nil];
+}
+
+%end
+
+id (* LSRTCValidateCallIntentForKey)(NSString *, id, LSRTCCallIntentValidatorParams *);
+%hookf(id, LSRTCValidateCallIntentForKey, NSString *key, id context, LSRTCCallIntentValidatorParams *params) {
+    MSGNavigationCoordinator_LSNavigationCoordinatorProxy *navigationCoordinator = [[params callIntent] navigationCoordinator];
+    if (!callConfirmation || ![key isEqual:@"rtc_integrity_joiner_transparency"]) return %orig;
+
+    [navigationCoordinator presentAlertWithCompletion:^(BOOL confirmed) {
+        if (confirmed) %orig;
+    }];
+
+    return nil;
+}
+
 #pragma mark - Disable read receipts
+
+%group MCINotificationCenterPostNotification
+
+void *(* MCINotificationCenterPostNotification)(id, NSString *, NSString *, NSMutableDictionary *);
+%hookf(void *, MCINotificationCenterPostNotification, id notifCenter, NSString *event, NSString *taskID, NSMutableDictionary *content) {
+    if (disableReadReceipts && [[content valueForKey:@"MCDNotificationTaskLabelsListKey"] isEqual:@[@"tam_thread_mark_read"]]) {
+        return nil;
+    }
+
+    return %orig;
+}
+
+%end
+
+// v458.0.0
+%group MCINotificationCenterPostStrictNotification
 
 void *(* MCINotificationCenterPostStrictNotification)(NSUInteger, id, NSString *, NSString *, NSMutableDictionary *);
 %hookf(void *, MCINotificationCenterPostStrictNotification, NSUInteger type, id notifCenter, NSString *event, NSString *uniqueID, NSMutableDictionary *content) {
@@ -298,6 +345,8 @@ void *(* MCINotificationCenterPostStrictNotification)(NSUInteger, id, NSString *
 
     return %orig;
 }
+
+%end
 
 #pragma mark - Disable stories preview
 
@@ -358,6 +407,11 @@ void *(* MCINotificationCenterPostStrictNotification)(NSUInteger, id, NSString *
 
 %hook MSGThreadRowCell
 
+- (BOOL)_isTypingWithModel:(id)arg1 {
+    return [@[@"CHAT_SECTIONS_ONLY", @"BOTH"] containsObject:disableTypingIndicator] ? NO : %orig;
+}
+
+// v458.0.0
 - (BOOL)_isTypingWithModel:(id)arg1 mailbox:(id)arg2 {
     return [@[@"CHAT_SECTIONS_ONLY", @"BOTH"] containsObject:disableTypingIndicator] ? NO : %orig;
 }
@@ -366,8 +420,7 @@ void *(* MCINotificationCenterPostStrictNotification)(NSUInteger, id, NSString *
 
 %hook MSGMessageListViewModelGenerator
 
-// v458.0.0
-- (void)didLoadThreadModel:(id)arg1 threadViewModelMap:(id)arg2 threadSessionIdentifier:(id)arg3 messageModels:(NSMutableArray <MSGTempMessageListItemModel *> *)models threadParticipants:(id)arg5 attributionIDV2:(id)arg6 loadMoreStateOlder:(int)arg7 loadMoreStateNewer:(int)arg8 didLoadNewIsland:(BOOL)arg9 completion:(id)arg10 {
+- (void)didLoadThreadModel:(id)arg1 threadViewModelMap:(id)arg2 threadSessionIdentifier:(id)arg3 messageModels:(NSMutableArray <MSGTempMessageListItemModel *> *)models threadParticipants:(id)arg5 attributionIDV2:(id)arg6 loadMoreStateOlder:(int)arg7 loadMoreStateNewer:(int)arg8 didLoadNewIsland:(BOOL)arg9 modelFetchedTimeInSeconds:(CGFloat)arg10 completion:(id)arg11 {
     if ([@[@"INBOX_ONLY", @"BOTH"] containsObject:disableTypingIndicator] && [[[models lastObject] messageId] isEqual:@"typing_indicator"]) {
         [models removeLastObject];
     }
@@ -375,7 +428,8 @@ void *(* MCINotificationCenterPostStrictNotification)(NSUInteger, id, NSString *
     %orig;
 }
 
-- (void)didLoadThreadModel:(id)arg1 threadViewModelMap:(id)arg2 threadSessionIdentifier:(id)arg3 messageModels:(NSMutableArray <MSGTempMessageListItemModel *> *)models threadParticipants:(id)arg5 attributionIDV2:(id)arg6 loadMoreStateOlder:(int)arg7 loadMoreStateNewer:(int)arg8 didLoadNewIsland:(BOOL)arg9 modelFetchedTimeInSeconds:(CGFloat)arg10 completion:(id)arg11 {
+// v458.0.0
+- (void)didLoadThreadModel:(id)arg1 threadViewModelMap:(id)arg2 threadSessionIdentifier:(id)arg3 messageModels:(NSMutableArray <MSGTempMessageListItemModel *> *)models threadParticipants:(id)arg5 attributionIDV2:(id)arg6 loadMoreStateOlder:(int)arg7 loadMoreStateNewer:(int)arg8 didLoadNewIsland:(BOOL)arg9 completion:(id)arg10 {
     if ([@[@"INBOX_ONLY", @"BOTH"] containsObject:disableTypingIndicator] && [[[models lastObject] messageId] isEqual:@"typing_indicator"]) {
         [models removeLastObject];
     }
@@ -387,8 +441,21 @@ void *(* MCINotificationCenterPostStrictNotification)(NSUInteger, id, NSString *
 
 #pragma mark - Extend story video upload duration
 
-BOOL (* MSGCSessionedMobileConfigGetBoolean)(MBIAuthDataContext *, MSGCSessionedMobileConfig *, void *, void *);
-%hookf(BOOL, MSGCSessionedMobileConfigGetBoolean, MBIAuthDataContext *context, MSGCSessionedMobileConfig *config, void *arg3, void *arg4) {
+%group MSGAVFoundationEstimateMaxVideoDurationInputCreate
+
+id (* MSGAVFoundationEstimateMaxVideoDurationInputCreate)(MSGMediaVideoPhasset *, NSUInteger, NSInteger, id, id);
+%hookf(id, MSGAVFoundationEstimateMaxVideoDurationInputCreate, MSGMediaVideoPhasset *videoAsset, NSUInteger maxVideoResolution, NSInteger maxFileSizeInBytes, id roundingFactorInSeconds, id completion) {
+    MSHookIvar<CGFloat>([videoAsset asset], "_duration") = 1.0f; // max ≈ 13 mins
+    return %orig;
+}
+
+%end
+
+// v458.0.0
+%group MSGCSessionedMobileConfig
+
+BOOL (* MSGCSessionedMobileConfigGetBoolean)(id, MSGCSessionedMobileConfig *, BOOL, BOOL);
+%hookf(BOOL, MSGCSessionedMobileConfigGetBoolean, id context, MSGCSessionedMobileConfig *config, BOOL arg3, BOOL arg4) {
     if (strcmp(config->subKey, "replace_system_trimmer") == 0) {
         return YES;
     }
@@ -396,14 +463,16 @@ BOOL (* MSGCSessionedMobileConfigGetBoolean)(MBIAuthDataContext *, MSGCSessioned
     return %orig;
 }
 
-CGFloat (* MSGCSessionedMobileConfigGetDouble)(MBIAuthDataContext *, MSGCSessionedMobileConfig *, BOOL, BOOL);
-%hookf(CGFloat, MSGCSessionedMobileConfigGetDouble, MBIAuthDataContext *context, MSGCSessionedMobileConfig *config, BOOL arg3, BOOL arg4) {
+CGFloat (* MSGCSessionedMobileConfigGetDouble)(id, MSGCSessionedMobileConfig *, BOOL, BOOL);
+%hookf(CGFloat, MSGCSessionedMobileConfigGetDouble, id context, MSGCSessionedMobileConfig *config, BOOL arg3, BOOL arg4) {
     if (strcmp(config->subKey, "max_story_duration") == 0) {
         return 600.0f; // 10 mins
     }
 
     return %orig;
 }
+
+%end
 
 #pragma mark - Hide notification badges in chat top bar | Keyboard state after entering chat | Disable long press to change theme
 
@@ -415,9 +484,9 @@ CGFloat (* MSGCSessionedMobileConfigGetDouble)(MBIAuthDataContext *, MSGCSession
     [viewOptions setValueForField:@"shouldHideBadgeInBackButton", hideNotifBadgesInChat];
 
     if (![keyboardStateAfterEnterChat isEqual:@"ADAPTIVE"]) {
-        if (IS_IOS_OR_NEWER(iOS_15_1)) {
+        if (MessengerVersion() > 458.0) {
             [viewOptions setValueForField:@"onOpenKeyboardState", [keyboardStateAfterEnterChat isEqual:@"ALWAYS_EXPANDED"] ? 2 : 3];
-        } else { // v458.0.0
+        } else {
             [viewOptions setValueForField:@"onOpenKeyboardState", [keyboardStateAfterEnterChat isEqual:@"ALWAYS_EXPANDED"] ? 2 : 1];
         }
     }
@@ -472,13 +541,41 @@ CGFloat (* MSGCSessionedMobileConfigGetDouble)(MBIAuthDataContext *, MSGCSession
 
 %end
 
-#pragma mark - Hide stories tab
+#pragma mark - Hide tabs in tab bar
+
+static BOOL hideTabBar = NO;
+
+%hook LSTabBarDataSource
+
+- (instancetype)initWithDependencies:(id)dependencies inboxLoadedCompletion:(id)completion {
+    LSTabBarDataSource *data = %orig;
+    NSMutableArray *items = [MSHookIvar<NSArray *>(data, "_tabBarItems") mutableCopy];
+    NSMutableArray *itemsInfo = [MSHookIvar<NSArray <MSGTabBarItemInfo *> *>(data, "_tabBarItemInfos") mutableCopy];
+    NSArray *removedItems = @[hidePeopleTab ? @"tabbar-people" : @"", hideStoriesTab ? @"tabbar-stories" : @""];
+
+    for (MSGTabBarItemInfo *info in [itemsInfo reverseObjectEnumerator]) {
+        if ([removedItems containsObject:[[info props] accessibilityIdentifierText]]) {
+            if ([itemsInfo count] > 2) {
+                [itemsInfo removeObject:info];
+                [items removeObject:info];
+            } else {
+                hideTabBar = YES;
+                break;
+            }
+        }
+    }
+
+    [data setValue:itemsInfo forKey:@"_tabBarItemInfos"];
+    [data setValue:items forKey:@"_tabBarItems"];
+    return data;
+}
+
+%end
 
 %hook MDSTabBarController
 
 - (void)_prepareTabBar {
-    if (hideStoriesTab) self.tabBar.hidden = YES;
-    %orig;
+    if (!hideTabBar) %orig;
 }
 
 %end
@@ -496,7 +593,7 @@ CGFloat (* MSGCSessionedMobileConfigGetDouble)(MBIAuthDataContext *, MSGCSession
         NSUInteger adUnitIndex = [[adUnit positionInThreadList] belowThreadIndex] + 2;
         BOOL isOffline = [units objectForKey:@"qp"];
 
-        if (noAds && adUnitIndex < [currentRows count]) [currentRows removeObjectAtIndex:adUnitIndex + isOffline];
+        if (noAds && adUnitIndex + isOffline < [currentRows count]) [currentRows removeObjectAtIndex:adUnitIndex + isOffline];
         if (hideNotesRow) [currentRows removeObjectAtIndex:isOffline];
     }
 
@@ -533,10 +630,10 @@ CGFloat (* MSGCSessionedMobileConfigGetDouble)(MBIAuthDataContext *, MSGCSession
         MSGStoryViewerOverflowMenuActionTypeSave *actionTypeSave = nil;
         MSGStoryOverlayProfileViewActionStandard *actionStandard = nil;
 
-        if (IS_IOS_OR_NEWER(iOS_15_1)) {
+        if (MessengerVersion() > 458.0) {
             actionTypeSave = [actionTypeSaveClass newADTModelWithInfo:&actionTypeSaveInfo adtInfo:&actionTypeSaveADTInfo];
             actionStandard = [actionStandardClass newADTModelWithInfo:&actionStandardInfo adtInfo:&actionStandardADTInfo];
-        } else { // v458.0.0
+        } else {
             actionTypeSave = [actionTypeSaveClass newADTModelWithInfo:&actionTypeSaveInfo adtValueSubtype:actionTypeSaveADTInfo.subtype];
             actionStandard = [actionStandardClass newADTModelWithInfo:&actionStandardInfo adtValueSubtype:actionStandardADTInfo.subtype];
         }
@@ -558,16 +655,38 @@ CGFloat (* MSGCSessionedMobileConfigGetDouble)(MBIAuthDataContext *, MSGCSession
     // Get the tweak bundle
     tweakBundle = SNMessengerBundle();
 
-    NSString *framework = IS_IOS_OR_NEWER(iOS_15_1) ? @"LightSpeedEngine.framework/LightSpeedEngine" : @"LightSpeedCore.framework/LightSpeedCore";
-    NSString *frameworkPath = [NSString stringWithFormat:@"%@/Frameworks/%@", [[NSBundle mainBundle] bundlePath], framework];
-    NSBundle *bundle = [NSBundle bundleWithPath:frameworkPath];
-    if (!bundle.loaded) [bundle load];
-    MSImageRef ref = MSGetImageByName([frameworkPath UTF8String]);
+    NSString *LightSpeedEngine = @"LightSpeedEngine.framework/LightSpeedEngine";
+    NSString *LSEnginePath = [NSString stringWithFormat:@"%@/Frameworks/%@", [[NSBundle mainBundle] bundlePath], LightSpeedEngine];
+    NSBundle *LSEngineBundle = [NSBundle bundleWithPath:LSEnginePath];
+    if (!LSEngineBundle.loaded) [LSEngineBundle load];
+    MSImageRef LSEngineRef = MSGetImageByName([LSEnginePath UTF8String]);
 
-    MSGModelDefineClass = (Class (*)(MSGModelInfo *))MSFindSymbol(ref, "_MSGModelDefineClass");
-    MCINotificationCenterPostStrictNotification = (void *(*)(NSUInteger, id, NSString *, NSString *, NSMutableDictionary *))MSFindSymbol(ref, "_MCINotificationCenterPostStrictNotification");
-    MSGCSessionedMobileConfigGetBoolean = (BOOL (*)(MBIAuthDataContext *, MSGCSessionedMobileConfig *, void *, void *))MSFindSymbol(ref, "_MSGCSessionedMobileConfigGetBoolean");
-    MSGCSessionedMobileConfigGetDouble = (CGFloat (*)(MBIAuthDataContext *, MSGCSessionedMobileConfig *, BOOL, BOOL))MSFindSymbol(ref, "_MSGCSessionedMobileConfigGetDouble");
+    NSString *LightSpeedCore = @"LightSpeedCore.framework/LightSpeedCore";
+    NSString *LSCorePath = [NSString stringWithFormat:@"%@/Frameworks/%@", [[NSBundle mainBundle] bundlePath], LightSpeedCore];
+    NSBundle *LSCoreBundle = [NSBundle bundleWithPath:LSCorePath];
+    if (!LSCoreBundle.loaded) [LSCoreBundle load];
+    MSImageRef LSCoreRef = MSGetImageByName([LSCorePath UTF8String]);
+
+    if (MessengerVersion() > 458.0) {
+        LSRTCValidateCallIntentForKey = (id (*)(NSString *, id, LSRTCCallIntentValidatorParams *))MSFindSymbol(LSCoreRef, "_LSRTCValidateCallIntentForKey");
+        MSGModelDefineClass = (Class (*)(MSGModelInfo *))MSFindSymbol(LSEngineRef, "_MSGModelDefineClass");
+
+        MCINotificationCenterPostNotification = (void *(*)(id, NSString *, NSString *, NSMutableDictionary *))MSFindSymbol(LSEngineRef, "_MCINotificationCenterPostNotification");
+        %init(MCINotificationCenterPostNotification);
+
+        MSGAVFoundationEstimateMaxVideoDurationInputCreate = (id (*)(MSGMediaVideoPhasset *, NSUInteger, NSInteger, id, id))MSFindSymbol(LSEngineRef, "_MSGAVFoundationEstimateMaxVideoDurationInputCreate");
+        %init(MSGAVFoundationEstimateMaxVideoDurationInputCreate);
+    } else {
+        LSRTCValidateCallIntentForKey = (id (*)(NSString *, id, LSRTCCallIntentValidatorParams *))MSFindSymbol(LSCoreRef, "_LSRTCValidateCallIntentForKey");
+        MSGModelDefineClass = (Class (*)(MSGModelInfo *))MSFindSymbol(LSCoreRef, "_MSGModelDefineClass");
+
+        MCINotificationCenterPostStrictNotification = (void *(*)(NSUInteger, id, NSString *, NSString *, NSMutableDictionary *))MSFindSymbol(LSCoreRef, "_MCINotificationCenterPostStrictNotification");
+        %init(MCINotificationCenterPostStrictNotification);
+
+        MSGCSessionedMobileConfigGetBoolean = (BOOL (*)(id, MSGCSessionedMobileConfig *, BOOL, BOOL))MSFindSymbol(LSCoreRef, "_MSGCSessionedMobileConfigGetBoolean");
+        MSGCSessionedMobileConfigGetDouble = (CGFloat (*)(id, MSGCSessionedMobileConfig *, BOOL, BOOL))MSFindSymbol(LSCoreRef, "_MSGCSessionedMobileConfigGetDouble");
+        %init(MSGCSessionedMobileConfig);
+    }
 
     %init;
 }

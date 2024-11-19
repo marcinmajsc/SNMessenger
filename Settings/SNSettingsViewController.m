@@ -62,6 +62,10 @@
     alwaysSendHdPhotosCell.prefKey = @"alwaysSendHdPhotos";
     alwaysSendHdPhotosCell.defaultValue = @(YES);
 
+    SNCellModel *callConfirmationCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"CALL_CONFIRMATION"];
+    callConfirmationCell.prefKey = @"callConfirmation";
+    callConfirmationCell.defaultValue = @(YES);
+
     SNCellModel *disableLongPressToChangeThemeCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"DISABLE_LONG_PRESS_TO_CHANGE_THEME"];
     disableLongPressToChangeThemeCell.prefKey = @"disableLongPressToChangeTheme";
 
@@ -113,6 +117,11 @@
 
     //=========================== UI OPTIONS ===========================//
 
+    SNCellModel *hidePeopleTabCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"HIDE_PEOPLE_TAB"];
+    hidePeopleTabCell.prefKey = @"hidePeopleTab";
+    hidePeopleTabCell.isRestartRequired = YES;
+    hidePeopleTabCell.disabled = (MessengerVersion() > 458.0);
+
     SNCellModel *hideStoriesTabCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"HIDE_STORIES_TAB"];
     hideStoriesTabCell.prefKey = @"hideStoriesTab";
     hideStoriesTabCell.isRestartRequired = YES;
@@ -157,6 +166,7 @@
 
         @"1": @[
                 alwaysSendHdPhotosCell,
+                callConfirmationCell,
                 disableLongPressToChangeThemeCell,
                 disableReadReceiptsCell,
                 disableTypingIndicatorCell,
@@ -174,6 +184,7 @@
             ],
 
         @"3": @[
+                hidePeopleTabCell,
                 hideStoriesTabCell,
                 hideNotesRowCell,
                 hideSearchBarCell,
@@ -277,6 +288,7 @@
     [alert addAction:[UIAlertAction actionWithTitle:localizedStringForKey(@"CONFIRM") style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
         exit(0);
     }]];
+
     [alert addAction:[UIAlertAction actionWithTitle:localizedStringForKey(@"CANCEL") style:UIAlertActionStyleCancel handler:^(UIAlertAction *action) {
         [self dismissViewControllerAnimated:YES completion:nil];
     }]];

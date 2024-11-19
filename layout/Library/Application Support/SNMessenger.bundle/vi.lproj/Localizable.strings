@@ -11,6 +11,9 @@
 "CHAT_OPTIONS" = "Cài đặt chat";
 "ALWAYS_SEND_HD_PHOTOS" = "Luôn luôn gửi hình HD";
 "ALWAYS_SEND_HD_PHOTOS_DESCRIPTION" = "Chỉ khi nút HD hiện trong menu chọn ảnh";
+"CALL_CONFIRMATION" = "Xác nhận khi gọi thoại / video";
+"CALL_CONFIRMATION_TITLE" = "Xác nhận cuộc gọi";
+"CALL_CONFIRMATION_MESSAGE" = "Bạn có chắc chắn muốn gọi không ?";
 "DISABLE_READ_RECEIPTS" = "Chặn thông báo đã đọc";
 "DISABLE_LONG_PRESS_TO_CHANGE_THEME" = "Tắt nhấn giữ để thay đổi nền chat";
 "DISABLE_TYPING_INDICATOR" = "Tắt thông báo đang soạn tin nhắn";
@@ -20,8 +23,8 @@
 "CHAT_SECTIONS_ONLY" = "Chỉ ở mục chat";
 "BOTH" = "Cả hai";
 "HIDE_NOTIF_BADGES_IN_CHAT" = "Ẩn số tin nhắn mới trong đoạn chat";
-"KEYBOARD_STATE_AFTER_ENTER_CHAT" = "Trạng thái của bàn phím khi vào đoạn chat";
-"KEYBOARD_STATE_AFTER_ENTER_CHAT_TITLE" = "Trạng thái của bàn phím";
+"KEYBOARD_STATE_AFTER_ENTER_CHAT" = "Trạng thái bàn phím khi vào đoạn chat";
+"KEYBOARD_STATE_AFTER_ENTER_CHAT_TITLE" = "Trạng thái bàn phím";
 "ADAPTIVE" = "Tùy theo app";
 "ALWAYS_EXPANDED" = "Luôn mở rộng";
 "ALWAYS_COLLAPSED" = "Luôn thu gọn";
@@ -35,6 +38,7 @@
 "HIDE_STATUS_BAR_WHEN_VIEWING_STORY_DESCRIPTION" = "Chỉ cho các thiết bị iOS 12";
 "NEVER_REPLAY_STORY_AFTER_REACTING" = "Không lặp lại tin sau khi thả cảm xúc";
 "UI_OPTIONS" = "Cài đặt giao diện";
+"HIDE_PEOPLE_TAB" = "Ẩn tab danh bạ";
 "HIDE_STORIES_TAB" = "Ẩn tab tin";
 "HIDE_NOTES_ROW" = "Ẩn mục ghi chú";
 "HIDE_SEARCH_BAR" = "Ẩn thanh tìm kiếm";

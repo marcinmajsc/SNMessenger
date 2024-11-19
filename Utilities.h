@@ -8,6 +8,11 @@
 extern BOOL isDarkMode;
 extern NSBundle *tweakBundle;
 
+static inline CGFloat MessengerVersion() {
+    NSString *version = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
+    return [[version substringToIndex:5] floatValue];
+}
+
 static inline NSString *localizedStringForKey(NSString *key) {
     return [tweakBundle localizedStringForKey:key value:nil table:nil];
 }

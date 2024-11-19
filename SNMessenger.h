@@ -1,5 +1,9 @@
+#import <variant>
+#import <vector>
 #import <AVKit/AVKit.h>
 #import "Utilities.h"
+
+using namespace std;
 
 @interface NSThread (Debug)
 + (NSString *)ams_symbolicatedCallStackSymbols;
@@ -23,22 +27,22 @@
 //                                               ||                                               //
 //===============================================||===============================================//
 
-NSString *(^typeLookup)(const char *, NSUInteger, BOOL) = ^NSString *(const char *encoding, NSUInteger type, BOOL isMethod) {
+NSString *(^typeLookup)(const char *, NSUInteger) = ^NSString *(const char *encoding, NSUInteger type) {
     SwitchStr (encoding) {
-        CaseEqual ("B") { return isMethod ? @"bool"   : @"Bool"; }
-        CaseEqual ("i") { return isMethod ? @"int32"  : @"Int"; }
-        CaseEqual ("I") { return isMethod ? @"int32"  : @"Unsigned Int32"; }
-        CaseEqual ("q") { return isMethod ? @"int64"  : @"Int64"; }
-        CaseEqual ("Q") { return isMethod ? @"int64"  : @"Unsigned Int64"; }
-        CaseEqual ("d") { return isMethod ? @"double" : @"Double"; }
-        CaseEqual ("f") { return isMethod ? @"float"  : @"Float"; }
-        CaseEqual (":") { return isMethod ? @"sel"    : @"Selector"; }
+        CaseEqual ("B") { return @"Bool"; }
+        CaseEqual ("i") { return @"Int"; }
+        CaseEqual ("I") { return @"Unsigned Int32"; }
+        CaseEqual ("q") { return @"Int64"; }
+        CaseEqual ("Q") { return @"Unsigned Int64"; }
+        CaseEqual ("d") { return @"Double"; }
+        CaseEqual ("f") { return @"Float"; }
+        CaseEqual (":") { return @"Selector"; }
 
         CaseEqual ("@") {
             if (type < 8) {
                 switch (type - !IS_IOS_OR_NEWER(iOS_15_1)) {
-                    case 5: return isMethod ? @"object"     : @"Strong Object";
-                    case 6: return isMethod ? @"weakObject" : @"Weak Object";
+                    case 5: return @"Strong Object";
+                    case 6: return @"Weak Object";
                 }
             }
 
@@ -54,11 +58,11 @@ NSString *(^typeLookup)(const char *, NSUInteger, BOOL) = ^NSString *(const char
 
         CaseStart ("^{") {
             switch (type) {
-                case 5: return isMethod ? @"struct" : @"Struct"; // v458.0.0
+                case 5: return @"Struct"; // v458.0.0
 
                 case 7:
                 case 8: {
-                    return isMethod ? @"mcfTypeRef" : @"MCFTypeRef";
+                    return @"MCFTypeRef";
                 }
 
                 default: break;
@@ -71,11 +75,6 @@ NSString *(^typeLookup)(const char *, NSUInteger, BOOL) = ^NSString *(const char
         }
     }
 };
-
-template<typename T> T getValue(id self, IMP imp, SEL selector, NSUInteger index) {
-    T (* func)(id, SEL, NSUInteger) = (T (*)(id, SEL, NSUInteger))imp;
-    return func(self, selector, index);
-}
 
 typedef struct {
     NSString *field_0;
@@ -148,7 +147,14 @@ typedef struct {
 - (void)setObjectValue:(id)value forFieldIndex:(NSUInteger)index;
 - (void)setValueForField:(NSString *)name, /* value: */ ...;
 - (id)valueAtFieldIndex:(NSUInteger)index;
+- (NSMutableDictionary *)debugMSGModel;
 @end
+
+@interface MSGModelWeakObjectContainer : NSObject
+- (id)value;
+@end
+
+using MSGModelTypes = vector<variant<bool, int, long long, double, float, id, MSGModelWeakObjectContainer *, void *, SEL *>, allocator<variant<bool, int, long long, double, float, id, MSGModelWeakObjectContainer *, void *, SEL *>>>;
 
 @interface MSGInboxViewController : UIViewController
 @end
@@ -246,13 +252,35 @@ typedef struct {
 @interface MSGStoryCardToolbox : MSGModel
 @end
 
-@interface MBIAuthDataContext : NSObject
-@end
-
 typedef struct {
     const char *key;
     const char *subKey;
 } MSGCSessionedMobileConfig;
 
 @interface MDSTabBarController : UITabBarController
+@end
+
+@interface MDSTabBarItemProps : MSGModel
+- (NSString *)accessibilityIdentifierText;
+@end
+@interface MSGTabBarItemInfo : MSGModel
+- (MDSTabBarItemProps *)props;
+@end
+
+@interface MSGNavigationCoordinator_LSNavigationCoordinatorProxy : NSObject
+- (void)dismissViewControllerAnimated:(BOOL)arg1 completion:(id)arg2;
+- (void)presentAlertWithCompletion:(void (^)(BOOL))completion;
+- (void)presentViewController:(id)arg1 presentationStyle:(NSInteger)arg2 animated:(BOOL)arg3 completion:(id)arg4;
+@end
+
+@interface LSRTCCallIntent : MSGModel
+- (MSGNavigationCoordinator_LSNavigationCoordinatorProxy *)navigationCoordinator;
+@end
+
+@interface LSRTCCallIntentValidatorParams : MSGModel
+- (LSRTCCallIntent *)callIntent;
+@end
+
+@interface MSGMediaVideoPhasset : MSGModel
+- (id)asset;
 @end

@@ -11,6 +11,9 @@
 "CHAT_OPTIONS" = "Chat options";
 "ALWAYS_SEND_HD_PHOTOS" = "Always send HD photos";
 "ALWAYS_SEND_HD_PHOTOS_DESCRIPTION" = "Only if HD option appears in image picker";
+"CALL_CONFIRMATION" = "Audio / Video call confirmation";
+"CALL_CONFIRMATION_TITLE" = "Call confirmation";
+"CALL_CONFIRMATION_MESSAGE" = "Are you sure you want to call ?";
 "DISABLE_READ_RECEIPTS" = "Disable read receipts";
 "DISABLE_LONG_PRESS_TO_CHANGE_THEME" = "Disable long press to change theme";
 "DISABLE_TYPING_INDICATOR" = "Disable typing indicator";
@@ -35,6 +38,7 @@
 "HIDE_STATUS_BAR_WHEN_VIEWING_STORY_DESCRIPTION" = "Only for iOS 12 devices";
 "NEVER_REPLAY_STORY_AFTER_REACTING" = "Never replay story after reacting";
 "UI_OPTIONS" = "UI options";
+"HIDE_PEOPLE_TAB" = "Hide people tab";
 "HIDE_STORIES_TAB" = "Hide stories tab";
 "HIDE_NOTES_ROW" = "Hide notes row";
 "HIDE_SEARCH_BAR" = "Hide search bar";
