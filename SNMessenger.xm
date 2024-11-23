@@ -338,7 +338,7 @@ void *(* MCINotificationCenterPostNotification)(id, NSString *, NSString *, NSMu
 %group MCINotificationCenterPostStrictNotification
 
 void *(* MCINotificationCenterPostStrictNotification)(NSUInteger, id, NSString *, NSString *, NSMutableDictionary *);
-%hookf(void *, MCINotificationCenterPostStrictNotification, NSUInteger type, id notifCenter, NSString *event, NSString *uniqueID, NSMutableDictionary *content) {
+%hookf(void *, MCINotificationCenterPostStrictNotification, NSUInteger type, id notifCenter, NSString *event, NSString *taskID, NSMutableDictionary *content) {
     if (disableReadReceipts && [[content valueForKey:@"MCDNotificationTaskLabelsListKey"] isEqual:@[@"tam_thread_mark_read"]]) {
         return nil;
     }

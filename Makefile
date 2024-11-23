@@ -1,6 +1,6 @@
 INSTALL_TARGET_PROCESSES = Messenger
 PACKAGE_VERSION = 1.0.0
-ARCHS = arm64 arm64e
+ARCHS = arm64
 
 ifeq ($(ROOTLESS), 1)
     THEOS_PACKAGE_SCHEME = rootless
