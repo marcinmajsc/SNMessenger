@@ -77,7 +77,7 @@ static void reloadPrefs() {
 %property (nonatomic, retain) UIBarButtonItem *settingsItem;
 
 - (void)viewWillAppear:(BOOL)arg1 {
-    if ([[self childViewControllerForUserInterfaceStyle] isKindOfClass:%c(MSGSettingsViewController)]) {
+    if (!self.settingsItem && [[self childViewControllerForUserInterfaceStyle] isKindOfClass:%c(MSGSettingsViewController)]) {
         UIButton *settingsButton = [[UIButton alloc] init];
         UIImage *settingsIcon = getTemplateImage(@"Gear@3x");
         [settingsButton setImage:settingsIcon forState:UIControlStateNormal];
@@ -92,7 +92,7 @@ static void reloadPrefs() {
         }
     }
 
-    if (showTheEyeButton && [[self childViewControllerForUserInterfaceStyle] isKindOfClass:%c(MSGInboxViewController)]) {
+    if (showTheEyeButton && !self.eyeItem && [[self childViewControllerForUserInterfaceStyle] isKindOfClass:%c(MSGInboxViewController)]) {
         UIButton *eyeButton = [[UIButton alloc] init];
         UIImage *eyeIcon = getTemplateImage(disableReadReceipts ? @"No-Receipt@3x" : @"Receipt@3x");
         [eyeButton setImage:eyeIcon forState:UIControlStateNormal];
@@ -213,29 +213,29 @@ Class (* MSGModelDefineClass)(MSGModelInfo *);
 - (id)valueAtFieldIndex:(NSUInteger)index {
     MSGModelInfo *modelInfo = MSHookIvar<MSGModelInfo *>(self, "_modelInfo");
     NSUInteger type = *(&modelInfo->fieldInfo->type_0 + 0x4 * index) % 256;
-    MSGModelTypes value = MSHookIvar<MSGModelTypes>(self, "_fieldValues");
+    MSGModelTypes values = MSHookIvar<MSGModelTypes>(self, "_fieldValues");
 
     if (index >= modelInfo->numberOfFields) return @"Out of fields.";
 
     switch (type) {
-        case 0: return @(get<bool>(value[index]));
-        case 1: return @(get<int>(value[index]));
-        case 2: return @(get<long long>(value[index]));
-        case 3: return @(get<double>(value[index]));
-        case 4: return @(get<float>(value[index]));
+        case 0: return @(get<bool>(values[index]));
+        case 1: return @(get<int>(values[index]));
+        case 2: return @(get<long long>(values[index]));
+        case 3: return @(get<double>(values[index]));
+        case 4: return @(get<float>(values[index]));
 
         case 5 ... 8: {
             switch (type - (MessengerVersion() <= 458.0)) {
-                case 4: return [NSValue valueWithPointer:get<void *>(value[index])]; // Struct in v458.0.0
-                case 5: return get<id>(value[index]);
-                case 6: return [get<MSGModelWeakObjectContainer *>(value[index]) value];
-                case 7: return (__bridge id)get<void *>(value[index]);
-                case 8: return NSStringFromSelector(*get<SEL *>(value[index]));
+                case 4: return [NSValue valueWithPointer:get<void *>(values[index])]; // Struct in v458.0.0
+                case 5: return get<id>(values[index]);
+                case 6: return [get<MSGModelWeakObjectContainer *>(values[index]) value];
+                case 7: return (__bridge id)get<void *>(values[index]);
+                case 8: return NSStringFromSelector(*get<SEL *>(values[index]));
                 default: break;
             }
         }
 
-        case 9 ... 13: return get<id>(value[index]);
+        case 9 ... 13: return get<id>(values[index]);
         default: break;
     }
 
@@ -420,7 +420,7 @@ void *(* MCINotificationCenterPostStrictNotification)(NSUInteger, id, NSString *
 
 %hook MSGMessageListViewModelGenerator
 
-- (void)didLoadThreadModel:(id)arg1 threadViewModelMap:(id)arg2 threadSessionIdentifier:(id)arg3 messageModels:(NSMutableArray <MSGTempMessageListItemModel *> *)models threadParticipants:(id)arg5 attributionIDV2:(id)arg6 loadMoreStateOlder:(int)arg7 loadMoreStateNewer:(int)arg8 didLoadNewIsland:(BOOL)arg9 modelFetchedTimeInSeconds:(CGFloat)arg10 completion:(id)arg11 {
+- (void)didLoadThreadModel:(id)arg1 threadViewModelMap:(id)arg2 threadSessionIdentifier:(id)arg3 messageModels:(NSMutableArray <MSGTempMessageListItemModel *> *)models componentStateMap:(id)arg5 threadParticipants:(id)arg6 attributionIDV2:(id)arg7 loadMoreStateOlder:(int)arg8 loadMoreStateNewer:(int)arg9 didLoadNewIsland:(BOOL)arg10 modelFetchedTimeInSeconds:(CGFloat)arg11 completion:(id)arg12 {
     if ([@[@"INBOX_ONLY", @"BOTH"] containsObject:disableTypingIndicator] && [[[models lastObject] messageId] isEqual:@"typing_indicator"]) {
         [models removeLastObject];
     }
@@ -484,11 +484,7 @@ CGFloat (* MSGCSessionedMobileConfigGetDouble)(id, MSGCSessionedMobileConfig *, 
     [viewOptions setValueForField:@"shouldHideBadgeInBackButton", hideNotifBadgesInChat];
 
     if (![keyboardStateAfterEnterChat isEqual:@"ADAPTIVE"]) {
-        if (MessengerVersion() > 458.0) {
-            [viewOptions setValueForField:@"onOpenKeyboardState", [keyboardStateAfterEnterChat isEqual:@"ALWAYS_EXPANDED"] ? 2 : 3];
-        } else {
-            [viewOptions setValueForField:@"onOpenKeyboardState", [keyboardStateAfterEnterChat isEqual:@"ALWAYS_EXPANDED"] ? 2 : 1];
-        }
+        [viewOptions setValueForField:@"onOpenKeyboardState", [keyboardStateAfterEnterChat isEqual:@"ALWAYS_EXPANDED"] ? 2 : 1];
     }
 
     return %orig;
