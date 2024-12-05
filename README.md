@@ -9,12 +9,12 @@ Access tweak's settings by tapping the gear icon in the top-left corner of profi
 ## Compatibility
 Supports iOS 12.4+, works on latest Messenger version down to v458.0.0
 
-| Jailbreak |    Status    |
-| --------- | ------------ |
-| Rootless  | Working      |
-| Rootful   | Working      |
-| Roothide  | Unknown      |
-| Jailed    | Not working  |
+| Jailbreak |     Status    |
+| --------- | ------------- |
+| Rootless  | Working       |
+| Rootful   | Working       |
+| Roothide  | Not supported |
+| Jailed    | Not working   |
 
 This tweak won't work (or will be broken) on **non-jailbroken devices** because some features require hooking private functions to work.
 
