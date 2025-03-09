@@ -25,6 +25,14 @@
         }
 
         switch (cellData.type) {
+            case Button: {
+                UIImageView *indicatorView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 16, 24)];
+                indicatorView.tintColor = colorWithHexString(isDarkMode ? @"#ffffff30" : @"#00000033");
+                indicatorView.image = getTemplateImage(@"Arrow@3x");
+                self.accessoryView = indicatorView;
+                break;
+            }
+
             case Switch: {
                 [self loadSwitcher];
                 break;
@@ -32,16 +40,6 @@
 
             case Link: {
                 self.accessoryType = UITableViewCellAccessoryNone;
-                break;
-            }
-
-            case OptionsList: {
-                UIImageView *indicatorView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 16, 24)];
-                indicatorView.tintColor = colorWithHexString(isDarkMode ? @"#ffffff30" : @"#00000033");
-                indicatorView.image = getTemplateImage(@"Arrow@3x");
-                self.accessoryView = indicatorView;
-
-                _cellData.buttonAction = @selector(pushViewControllerWithOptionsList);
                 break;
             }
 
@@ -54,6 +52,7 @@
                 break;
         }
     }
+
     return self;
 }
 

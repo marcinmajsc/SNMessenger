@@ -9,7 +9,8 @@ static BOOL alwaysSendHdPhotos;
 static BOOL callConfirmation;
 static BOOL disableLongPressToChangeChatTheme;
 static BOOL disableReadReceipts;
-static NSString *disableTypingIndicator;
+static BOOL disableTypingIndicator;
+static NSString *hideTypingIndicator;
 static BOOL hideNotifBadgesInChat;
 static NSString *keyboardStateAfterEnterChat;
 static BOOL canSaveFriendsStories;
@@ -52,7 +53,8 @@ static void reloadPrefs() {
     callConfirmation = [[settings objectForKey:@"callConfirmation"] ?: @(YES) boolValue];
     disableReadReceipts = [[settings objectForKey:@"disableReadReceipts"] ?: @(YES) boolValue];
     disableLongPressToChangeChatTheme = [[settings objectForKey:@"disableLongPressToChangeTheme"] ?: @(NO) boolValue];
-    disableTypingIndicator = [settings objectForKey:@"disableTypingIndicator"] ?: @"NOWHERE";
+    disableTypingIndicator = [[settings objectForKey:@"disableTypingIndicator"] ?: @(NO) boolValue];
+    hideTypingIndicator = [settings objectForKey:@"hideTypingIndicator"] ?: @"NOWHERE";
     hideNotifBadgesInChat = [[settings objectForKey:@"hideNotifBadgesInChat"] ?: @(NO) boolValue];
     keyboardStateAfterEnterChat = [settings objectForKey:@"keyboardStateAfterEnterChat"] ?: @"ADAPTIVE";
 
@@ -72,6 +74,38 @@ static void reloadPrefs() {
 
 #pragma mark - Settings page | Quick toggle to disable/enable read receipts
 
+%hook MSGCommunityListViewController
+
+- (NSMutableArray *)_headerSectionCellConfigs {
+    NSMutableArray *cellConfigs = %orig;
+    if ([cellConfigs count] == 3) {
+        NSArray *folders = MSHookIvar<NSArray *>(self, "_folders");
+        MSGInboxFolderListItemInfoFolder *settingsConfig = [[folders firstObject] copy];
+        [settingsConfig setValueForField:@"folderName", localizedStringForKey(@"ADVANCED_SETTINGS")];
+        [settingsConfig setValueForField:@"dispatchKey", @"advanced_settings_folder"];
+        [settingsConfig setValueForField:@"mdsIconName", 119736542]; // Hard-coded in `MDSIconNameString`
+        [settingsConfig setValueForField:@"badgeCount", 0];
+
+        LSTableViewCellConfig *settingsCell = [[self getTableViewCellConfigs:@[settingsConfig] shouldRenderCMPresence:NO] firstObject];
+        [settingsCell setValueForField:@"actionHandler", ^{ [self showTweakSettings]; }];
+
+        [cellConfigs insertObject:[[cellConfigs lastObject] copy] atIndex:0]; // Space cell
+        [cellConfigs insertObject:settingsCell atIndex:0];
+    }
+
+    return cellConfigs;
+}
+
+%new(v@:)
+- (void)showTweakSettings {
+    isDarkMode = MSHookIvar<NSInteger>(self.navigationController, "_statusBarStyleFromTheme") == 1;
+    SNSettingsViewController *settingsController = [[SNSettingsViewController alloc] init];
+    [self.navigationController pushViewController:settingsController animated:YES];
+}
+
+%end
+
+// v458.0.0
 %hook MDSNavigationController
 %property (nonatomic, retain) UIBarButtonItem *eyeItem;
 %property (nonatomic, retain) UIBarButtonItem *settingsItem;
@@ -128,25 +162,38 @@ static void reloadPrefs() {
 #pragma mark - Necessary hooks
 
 Class actionStandardClass;
-MSGModelInfo actionStandardInfo;
-MSGModelADTInfo actionStandardADTInfo = { "MSGStoryOverlayProfileViewAction", 0 };
+MSGModelInfo actionStandardInfo = {};
+MSGModelADTInfo actionStandardADTInfo = {
+    .name = "MSGStoryOverlayProfileViewAction",
+    .subtype = 0
+};
 
 Class actionTypeSaveClass;
-MSGModelInfo actionTypeSaveInfo = { "MSGStoryViewerOverflowMenuActionTypeSave", 0, nil, nil, YES, nil};
-MSGModelADTInfo actionTypeSaveADTInfo = { "MSGStoryViewerOverflowMenuActionType", 2 };
+MSGModelInfo actionTypeSaveInfo = {
+    .name = "MSGStoryViewerOverflowMenuActionTypeSave",
+    .numberOfFields = 0,
+    .fieldInfo = nil,
+    .resultSet = nil,
+    .var4 = YES,
+    .var5 = nil
+};
+MSGModelADTInfo actionTypeSaveADTInfo = {
+    .name = "MSGStoryViewerOverflowMenuActionType",
+    .subtype = 2
+};
 
 Class (* MSGModelDefineClass)(MSGModelInfo *);
 %hookf(Class, MSGModelDefineClass, MSGModelInfo *info) {
     Class modelClass = %orig;
 
-    SwitchStr (info->name) {
-        CaseEqual ("MSGStoryOverlayProfileViewActionStandard") {
+    SwitchCStr (info->name) {
+        CaseCEqual ("MSGStoryOverlayProfileViewActionStandard") {
             actionStandardClass = modelClass;
             actionStandardInfo = *info;
             break;
         }
 
-        CaseEqual ("MSGStoryViewerOverflowMenuActionTypeSave") {
+        CaseCEqual ("MSGStoryViewerOverflowMenuActionTypeSave") {
             return objc_lookUpClass("MSGStoryViewerOverflowMenuActionTypeSave") ?: modelClass;
         }
 
@@ -324,7 +371,7 @@ id (* LSRTCValidateCallIntentForKey)(NSString *, id, LSRTCCallIntentValidatorPar
 %group MCINotificationCenterPostNotification
 
 void *(* MCINotificationCenterPostNotification)(id, NSString *, NSString *, NSMutableDictionary *);
-%hookf(void *, MCINotificationCenterPostNotification, id notifCenter, NSString *event, NSString *taskID, NSMutableDictionary *content) {
+%hookf(void *, MCINotificationCenterPostNotification, id notifCenter, NSString *event, NSString *taskID, id content) {
     if (disableReadReceipts && [[content valueForKey:@"MCDNotificationTaskLabelsListKey"] isEqual:@[@"tam_thread_mark_read"]]) {
         return nil;
     }
@@ -365,34 +412,16 @@ void *(* MCINotificationCenterPostStrictNotification)(NSUInteger, id, NSString *
 #pragma mark - Disable story seen receipt | Disable story replay after reacting
 
 %hook LSStoryBucketViewController
-%property (nonatomic, assign) BOOL isSelfStory;
-%property (nonatomic, assign) CGFloat duration;
 
 - (void)startTimer {
-    self.isSelfStory = [self.ownerId isEqual:[[%c(FBAnalytics) sharedAnalytics] userFBID]];
-    if (!disableStorySeenReceipts || self.isSelfStory) {
-        return %orig;
-    }
+    // Here we simply invoke [super startTimer] to do the timming job
+    struct objc_super superInfo = {
+        .receiver = self,
+        .super_class = %c(LSStoryBucketViewControllerBase)
+    };
 
-    LSVideoPlayerView *playerView = MSHookIvar<LSVideoPlayerView *>(self, "_videoPlayerView");
-    self.duration = [self getDurationFromPlayerView:playerView];
-
-    [MSHookIvar<NSTimer *>(self, "_storyTimer") invalidate]; // Stop last timer
-    NSTimer *timer = [NSTimer scheduledTimerWithTimeInterval:0.01f target:self selector:@selector(_updateProgressIndicator) userInfo:nil repeats:YES];
-    [self setValue:timer forKey:@"_storyTimer"]; // Set new timer
-}
-
-- (CGFloat)storyDuration {
-    return disableStorySeenReceipts && !self.isSelfStory ? self.duration : %orig;
-}
-
-%new(d@:@)
-- (CGFloat)getDurationFromPlayerView:(LSVideoPlayerView *)playerView {
-    if (playerView) {
-        CMTime timeStruct = [playerView duration];
-        return (CGFloat)timeStruct.value / (CGFloat)timeStruct.timescale;
-    }
-    return 5.0f; // Default value for non-video stories
+    void (* startTimerSuper)(struct objc_super *, SEL) = (void (*)(struct objc_super *, SEL))objc_msgSendSuper;
+    startTimerSuper(&superInfo, @selector(startTimer));
 }
 
 - (void)replyBarWillPlayStoryFromBeginning:(id)arg1 {
@@ -405,36 +434,11 @@ void *(* MCINotificationCenterPostStrictNotification)(NSUInteger, id, NSString *
 
 #pragma mark - Disable typing indicator
 
-%hook MSGThreadRowCell
+%group MCQTamClientTypingIndicatorStart
 
-- (BOOL)_isTypingWithModel:(id)arg1 {
-    return [@[@"CHAT_SECTIONS_ONLY", @"BOTH"] containsObject:disableTypingIndicator] ? NO : %orig;
-}
-
-// v458.0.0
-- (BOOL)_isTypingWithModel:(id)arg1 mailbox:(id)arg2 {
-    return [@[@"CHAT_SECTIONS_ONLY", @"BOTH"] containsObject:disableTypingIndicator] ? NO : %orig;
-}
-
-%end
-
-%hook MSGMessageListViewModelGenerator
-
-- (void)didLoadThreadModel:(id)arg1 threadViewModelMap:(id)arg2 threadSessionIdentifier:(id)arg3 messageModels:(NSMutableArray <MSGTempMessageListItemModel *> *)models componentStateMap:(id)arg5 threadParticipants:(id)arg6 attributionIDV2:(id)arg7 loadMoreStateOlder:(int)arg8 loadMoreStateNewer:(int)arg9 didLoadNewIsland:(BOOL)arg10 modelFetchedTimeInSeconds:(CGFloat)arg11 completion:(id)arg12 {
-    if ([@[@"INBOX_ONLY", @"BOTH"] containsObject:disableTypingIndicator] && [[[models lastObject] messageId] isEqual:@"typing_indicator"]) {
-        [models removeLastObject];
-    }
-
-    %orig;
-}
-
-// v458.0.0
-- (void)didLoadThreadModel:(id)arg1 threadViewModelMap:(id)arg2 threadSessionIdentifier:(id)arg3 messageModels:(NSMutableArray <MSGTempMessageListItemModel *> *)models threadParticipants:(id)arg5 attributionIDV2:(id)arg6 loadMoreStateOlder:(int)arg7 loadMoreStateNewer:(int)arg8 didLoadNewIsland:(BOOL)arg9 completion:(id)arg10 {
-    if ([@[@"INBOX_ONLY", @"BOTH"] containsObject:disableTypingIndicator] && [[[models lastObject] messageId] isEqual:@"typing_indicator"]) {
-        [models removeLastObject];
-    }
-
-    %orig;
+void (* MCQTamClientTypingIndicatorStart)();
+%hookf(void, MCQTamClientTypingIndicatorStart) {
+    if (!disableTypingIndicator) return %orig;
 }
 
 %end
@@ -474,6 +478,18 @@ CGFloat (* MSGCSessionedMobileConfigGetDouble)(id, MSGCSessionedMobileConfig *, 
 
 %end
 
+#pragma mark - Hide notes row | Hide search bar
+
+%hook MSGThreadListDataSource
+
+- (instancetype)initWithViewRendererContext:(id)context mailbox:(id)mailbox config:(MSGThreadListConfig *)config {
+    [config setValueForField:@"shouldShowSearch", !hideSearchBar];
+    [config setValueForField:@"shouldShowInboxUnit", !hideNotesRow];
+    return %orig;
+}
+
+%end
+
 #pragma mark - Hide notification badges in chat top bar | Keyboard state after entering chat | Disable long press to change theme
 
 %hook MSGThreadViewController
@@ -492,19 +508,6 @@ CGFloat (* MSGCSessionedMobileConfigGetDouble)(id, MSGCSessionedMobileConfig *, 
 
 - (void)messageListViewControllerDidLongPressBackground:(id)arg1 {
     if (!disableLongPressToChangeChatTheme) %orig;
-}
-
-%end
-
-#pragma mark - Hide search bar
-
-%hook MSGInboxViewController
-
-- (void)viewDidLoad {
-    %orig;
-    if (hideSearchBar) {
-        self.navigationItem.searchController = nil;
-    }
 }
 
 %end
@@ -576,21 +579,67 @@ static BOOL hideTabBar = NO;
 
 %end
 
-#pragma mark - Remove ads | Hide notes row
+#pragma mark - Hide typing indicator
 
+%hook MSGThreadRowCell
+
+- (BOOL)_isTypingWithModel:(id)arg1 {
+    return [@[@"IN_THREAD_LIST_ONLY", @"BOTH"] containsObject:hideTypingIndicator] ? NO : %orig;
+}
+
+// v458.0.0
+- (BOOL)_isTypingWithModel:(id)arg1 mailbox:(id)arg2 {
+    return [@[@"IN_THREAD_LIST_ONLY", @"BOTH"] containsObject:hideTypingIndicator] ? NO : %orig;
+}
+
+%end
+
+%hook MSGMessageListViewModelGenerator
+
+- (void)didLoadThreadModel:(id)arg1 threadViewModelMap:(id)arg2 threadSessionIdentifier:(id)arg3 messageModels:(NSMutableArray <MSGTempMessageListItemModel *> *)models threadParticipants:(id)arg6 attributionIDV2:(id)arg7 loadMoreStateOlder:(int)arg8 loadMoreStateNewer:(int)arg9 didLoadNewIsland:(BOOL)arg10 modelFetchedTimeInSeconds:(CGFloat)arg11 completion:(id)arg12 {
+    if ([@[@"IN_CHAT_ONLY", @"BOTH"] containsObject:hideTypingIndicator] && [[[models lastObject] messageId] isEqual:@"typing_indicator"]) {
+        [models removeLastObject];
+    }
+
+    %orig;
+}
+
+// v458.0.0
+- (void)didLoadThreadModel:(id)arg1 threadViewModelMap:(id)arg2 threadSessionIdentifier:(id)arg3 messageModels:(NSMutableArray <MSGTempMessageListItemModel *> *)models threadParticipants:(id)arg5 attributionIDV2:(id)arg6 loadMoreStateOlder:(int)arg7 loadMoreStateNewer:(int)arg8 didLoadNewIsland:(BOOL)arg9 completion:(id)arg10 {
+    if ([@[@"IN_CHAT_ONLY", @"BOTH"] containsObject:hideTypingIndicator] && [[[models lastObject] messageId] isEqual:@"typing_indicator"]) {
+        [models removeLastObject];
+    }
+
+    %orig;
+}
+
+%end
+
+#pragma mark - Remove ads
+
+%hook MSGInboxAdsUserScopedPlugin
+
+- (id)MSGInboxAdsUnitFetcher_MSGFetchInboxUnit:(id)arg1 {
+    return noAds ? nil : %orig;
+}
+
+%end
+
+// v458.0.0
 %hook MSGThreadListDataSource
 
 - (NSArray *)inboxRows {
     NSMutableArray *currentRows = [%orig mutableCopy];
-    if ([self isInitializationComplete] && (noAds || hideNotesRow) && [currentRows count] > 0) {
+    if ([self isInitializationComplete] && noAds && [currentRows count] > 0) {
         MSGThreadListUnitsSate *unitsState = MSHookIvar<MSGThreadListUnitsSate *>(self, "_unitsState");
         NSMutableDictionary *units = [unitsState unitKeyToUnit];
         MSGInboxUnit *adUnit = [units objectForKey:@"ads_renderer"];
         NSUInteger adUnitIndex = [[adUnit positionInThreadList] belowThreadIndex] + 2;
         BOOL isOffline = [units objectForKey:@"qp"];
 
-        if (noAds && adUnitIndex + isOffline < [currentRows count]) [currentRows removeObjectAtIndex:adUnitIndex + isOffline];
-        if (hideNotesRow) [currentRows removeObjectAtIndex:isOffline];
+        if (adUnit && adUnitIndex + isOffline < [currentRows count]) {
+            [currentRows removeObjectAtIndex:adUnitIndex + isOffline];
+        }
     }
 
     return currentRows;
@@ -655,6 +704,9 @@ static BOOL hideTabBar = NO;
     MSImageRef LSCoreRef = getImageRef(@"LightSpeedCore.framework/LightSpeedCore");
 
     if (MessengerVersion() > 458.0) {
+        MCQTamClientTypingIndicatorStart = (void (*)())MSFindSymbol(LSEngineRef, "_MCQTamClientTypingIndicatorStart");
+        %init(MCQTamClientTypingIndicatorStart);
+
         LSRTCValidateCallIntentForKey = (id (*)(NSString *, id, LSRTCCallIntentValidatorParams *))MSFindSymbol(LSCoreRef, "_LSRTCValidateCallIntentForKey");
         MSGModelDefineClass = (Class (*)(MSGModelInfo *))MSFindSymbol(LSEngineRef, "_MSGModelDefineClass");
 

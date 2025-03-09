@@ -1,5 +1,6 @@
-#import "SNOptionsListViewController.h"
 #import "SNSettingsViewController.h"
+#import "SNSubSettingsViewController.h"
+#import <signal.h>
 
 @implementation SNSettingsViewController
 
@@ -8,21 +9,22 @@
         self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:localizedStringForKey(@"APPLY") style:UIBarButtonItemStyleDone target:self action:@selector(close)];
 
         self.navigationItem.titleView = [[UIView alloc] init];
-        _titleLabel = [[UILabel alloc] init];
-        _titleLabel.font = [UIFont systemFontOfSize:17.5f weight:UIFontWeightBold];
-        _titleLabel.text = @"Advanced Settings";
-        _titleLabel.textAlignment = NSTextAlignmentCenter;
-        _titleLabel.textColor = isDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
-        _titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
-        [self.navigationItem.titleView addSubview:_titleLabel];
+        UILabel *titleLabel = [[UILabel alloc] init];
+        titleLabel.font = [UIFont systemFontOfSize:17.5f weight:UIFontWeightBold];
+        titleLabel.text = localizedStringForKey(@"ADVANCED_SETTINGS");
+        titleLabel.textAlignment = NSTextAlignmentCenter;
+        titleLabel.textColor = isDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
+        titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
+        [self.navigationItem.titleView addSubview:titleLabel];
 
         [NSLayoutConstraint activateConstraints:@[
-            [_titleLabel.topAnchor constraintEqualToAnchor:self.navigationItem.titleView.topAnchor],
-            [_titleLabel.leadingAnchor constraintEqualToAnchor:self.navigationItem.titleView.leadingAnchor],
-            [_titleLabel.trailingAnchor constraintEqualToAnchor:self.navigationItem.titleView.trailingAnchor],
-            [_titleLabel.bottomAnchor constraintEqualToAnchor:self.navigationItem.titleView.bottomAnchor],
+            [titleLabel.topAnchor constraintEqualToAnchor:self.navigationItem.titleView.topAnchor],
+            [titleLabel.leadingAnchor constraintEqualToAnchor:self.navigationItem.titleView.leadingAnchor],
+            [titleLabel.trailingAnchor constraintEqualToAnchor:self.navigationItem.titleView.trailingAnchor],
+            [titleLabel.bottomAnchor constraintEqualToAnchor:self.navigationItem.titleView.bottomAnchor],
         ]];
     }
+
     return self;
 }
 
@@ -38,11 +40,10 @@
     _tableView.dataSource = self;
     [self.view addSubview:_tableView];
 
-    // Setup table rows
-    [self initTableData];
+    [self initSettingsData];
 }
 
-- (void)initTableData {
+- (void)initSettingsData {
     //======================== GENERAL OPTIONS =========================//
 
     SNCellModel *noAdsCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"NO_ADS"];
@@ -53,6 +54,7 @@
     SNCellModel *showTheEyeCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"SHOW_THE_EYE_BUTTON"];
     showTheEyeCell.subtitleKey = @"QUICK_ENABLE_DISABLE_READ_RECEIPT";
     showTheEyeCell.prefKey = @"showTheEyeButton";
+    showTheEyeCell.isRestartRequired = YES;
     showTheEyeCell.defaultValue = @(YES);
 
     //========================== CHAT OPTIONS ==========================//
@@ -66,6 +68,12 @@
     callConfirmationCell.prefKey = @"callConfirmation";
     callConfirmationCell.defaultValue = @(YES);
 
+    SNCellModel *configKeyboardState = [[SNCellModel alloc] initWithType:Button labelKey:@"CONFIG_KEYBOARD_STATE"];
+    configKeyboardState.actionBlock = ^{ [self openSubSettingsWithIdentifier:@"Keyboard-State"]; };
+
+    SNCellModel *configTypingIndicatorCell = [[SNCellModel alloc] initWithType:Button labelKey:@"CONFIG_TYPING_INDICATOR"];
+    configTypingIndicatorCell.actionBlock = ^{ [self openSubSettingsWithIdentifier:@"Typing-Indicator"]; };
+
     SNCellModel *disableLongPressToChangeThemeCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"DISABLE_LONG_PRESS_TO_CHANGE_THEME"];
     disableLongPressToChangeThemeCell.prefKey = @"disableLongPressToChangeTheme";
 
@@ -73,20 +81,8 @@
     disableReadReceiptsCell.prefKey = @"disableReadReceipts";
     disableReadReceiptsCell.defaultValue = @(YES);
 
-    SNCellModel *disableTypingIndicatorCell = [[SNCellModel alloc] initWithType:OptionsList labelKey:@"DISABLE_TYPING_INDICATOR"];
-    disableTypingIndicatorCell.prefKey = @"disableTypingIndicator";
-    disableTypingIndicatorCell.titleKey = @"DISABLE_TYPING_INDICATOR_TITLE";
-    disableTypingIndicatorCell.listOptions = @[@"NOWHERE", @"INBOX_ONLY", @"CHAT_SECTIONS_ONLY", @"BOTH"];
-    disableTypingIndicatorCell.defaultValue = @"NOWHERE";
-
     SNCellModel *hideNotifBadgesInChatCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"HIDE_NOTIF_BADGES_IN_CHAT"];
     hideNotifBadgesInChatCell.prefKey = @"hideNotifBadgesInChat";
-
-    SNCellModel *keyboardStateAfterEnterChatCell = [[SNCellModel alloc] initWithType:OptionsList labelKey:@"KEYBOARD_STATE_AFTER_ENTER_CHAT"];
-    keyboardStateAfterEnterChatCell.prefKey = @"keyboardStateAfterEnterChat";
-    keyboardStateAfterEnterChatCell.titleKey = @"KEYBOARD_STATE_AFTER_ENTER_CHAT_TITLE";
-    keyboardStateAfterEnterChatCell.listOptions = @[@"ADAPTIVE", @"ALWAYS_EXPANDED", @"ALWAYS_COLLAPSED"];
-    keyboardStateAfterEnterChatCell.defaultValue = @"ADAPTIVE";
 
     //========================= STORY OPTIONS ==========================//
 
@@ -128,6 +124,7 @@
 
     SNCellModel *hideNotesRowCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"HIDE_NOTES_ROW"];
     hideNotesRowCell.prefKey = @"hideNotesRow";
+    hideStoriesTabCell.isRestartRequired = YES;
 
     SNCellModel *hideSearchBarCell = [[SNCellModel alloc] initWithType:Switch labelKey:@"HIDE_SEARCH_BAR"];
     hideSearchBarCell.prefKey = @"hideSearchBar";
@@ -167,11 +164,11 @@
         @"1": @[
                 alwaysSendHdPhotosCell,
                 callConfirmationCell,
+                configKeyboardState,
+                configTypingIndicatorCell,
                 disableLongPressToChangeThemeCell,
                 disableReadReceiptsCell,
-                disableTypingIndicatorCell,
-                hideNotifBadgesInChatCell,
-                keyboardStateAfterEnterChatCell
+                hideNotifBadgesInChatCell
             ],
 
         @"2": @[
@@ -198,14 +195,6 @@
                 donationCell
             ]
     };
-}
-
-- (void)pushViewControllerWithOptionsList {
-    NSIndexPath *indexPath = _tableView.indexPathForSelectedRow;
-    NSArray *dataRow = [_tableData valueForKey:[@(indexPath.section) stringValue]];
-    SNCellModel *optionsListData = [dataRow objectAtIndex:indexPath.row];
-    SNOptionsListViewController *viewController = [[SNOptionsListViewController alloc] initWithOptionsListData:optionsListData];
-    [self.navigationController pushViewController:viewController animated:YES];
 }
 
 - (NSInteger)numberOfSectionsInTableView:(TOInsetGroupedTableView *)tableView {
@@ -242,40 +231,38 @@
 }
 
 - (SNTableViewCell *)tableView:(TOInsetGroupedTableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSArray *dataRow = [_tableData valueForKey:[@(indexPath.section) stringValue]];
-    SNCellModel *cellData = [dataRow objectAtIndex:indexPath.row];
+    NSArray *rowData = [_tableData valueForKey:[@(indexPath.section) stringValue]];
+    SNCellModel *cellData = [rowData objectAtIndex:indexPath.row];
 
     NSString *cellIdentifier = [NSString stringWithFormat:@"SNTableViewCell - type: %lu - labelKey: %@ - subtitleKey: %@", cellData.type, cellData.labelKey, cellData.subtitleKey];
     SNTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier];
     if (cell == nil) {
         cell = [[SNTableViewCell alloc] initWithData:cellData reuseIdentifier:cellIdentifier];
     }
+
     return cell;
 }
 
 - (CGFloat)tableView:(TOInsetGroupedTableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSArray *dataRow = [_tableData valueForKey:[@(indexPath.section) stringValue]];
-    SNCellModel *cellData = [dataRow objectAtIndex:indexPath.row];
+    NSArray *rowData = [_tableData valueForKey:[@(indexPath.section) stringValue]];
+    SNCellModel *cellData = [rowData objectAtIndex:indexPath.row];
     return cellData.subtitleKey ? 173.0f / 3.0f : 52.0f;
 }
 
 - (NSString *)tableView:(TOInsetGroupedTableView *)tableView titleForFooterInSection:(NSInteger)section {
-    return section == [_tableData count] - 1 ? @"SNMessenger, made with 💖" : nil;
+    return section == [_tableData count] - 1 ? @"SNMessenger, fuck Meta 🔥" : nil;
 }
 
 - (void)tableView:(TOInsetGroupedTableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSArray *dataRow = [_tableData valueForKey:[@(indexPath.section) stringValue]];
-    SNCellModel *cellData = [dataRow objectAtIndex:indexPath.row];
+    NSArray *rowData = [_tableData valueForKey:[@(indexPath.section) stringValue]];
+    SNCellModel *cellData = [rowData objectAtIndex:indexPath.row];
     if (cellData.type == Link) {
         UIApplication *app = [UIApplication sharedApplication];
         [app openURL:[NSURL URLWithString:cellData.url] options:@{} completionHandler:nil];
     }
 
-    if (cellData.type == OptionsList) {
-        SEL selector = cellData.buttonAction;
-        IMP imp = [self methodForSelector:selector];
-        void (*func)(id, SEL) = (void *)imp;
-        func(self, selector);
+    if (cellData.type == Button && cellData.actionBlock) {
+        cellData.actionBlock();
     }
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
@@ -283,10 +270,15 @@
     });
 }
 
+- (void)openSubSettingsWithIdentifier:(NSString *)identifier {
+    SNSubSettingsViewController *subSettings = [[SNSubSettingsViewController alloc] initWithIdentifier:identifier];
+    [self.navigationController pushViewController:subSettings animated:YES];
+}
+
 - (void)showRequireRestartAlert {
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:localizedStringForKey(@"RESTART_MESSAGE") message:localizedStringForKey(@"RESTART_CONFIRM_MESSAGE") preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:localizedStringForKey(@"CONFIRM") style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
-        exit(0);
+        kill(getpid(), SIGTERM);
     }]];
 
     [alert addAction:[UIAlertAction actionWithTitle:localizedStringForKey(@"CANCEL") style:UIAlertActionStyleCancel handler:^(UIAlertAction *action) {
@@ -310,7 +302,11 @@
         }
     }
 
-    [self dismissViewControllerAnimated:YES completion:nil];
+    if ([self.navigationController respondsToSelector:@selector(_handleEscapeKey)]) {
+        [(MDSNavigationController *)self.navigationController _handleEscapeKey];
+    } else {
+        [self dismissViewControllerAnimated:YES completion:nil];
+    }
 }
 
 @end

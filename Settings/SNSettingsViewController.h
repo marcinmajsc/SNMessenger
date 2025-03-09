@@ -1,3 +1,4 @@
+#import "Headers/MDSNavigationController.h"
 #import "SNCellModel.h"
 #import "SNTableViewCell.h"
 #import "TOInsetGroupedTableView.h"
@@ -7,7 +8,6 @@
     NSMutableDictionary *_originalSettings;
     TOInsetGroupedTableView *_tableView;
     NSDictionary *_tableData;
-    UILabel *_titleLabel;
 }
 - (instancetype)init;
 @end

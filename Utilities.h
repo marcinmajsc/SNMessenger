@@ -6,6 +6,16 @@
 
 #define PREF_CHANGED_NOTIF "SNMessenger/prefChanged"
 
+// A trick to use "case/switch" with string
+#define SwitchCStr(s) for (const char *__s__ = (s) ; ; )
+#define CaseCEqual(str) if (strcmp(str, __s__) == 0)
+#define CaseCStart(str) if (strncmp(str, __s__, strlen(str)) == 0)
+
+#define SwitchStr(s) for (NSString *__s__ = (s) ; ; )
+#define CaseEqual(str) if ([str isEqualToString:__s__])
+
+#define Default
+
 extern BOOL isDarkMode;
 extern NSBundle *tweakBundle;
 
