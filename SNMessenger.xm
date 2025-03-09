@@ -414,6 +414,8 @@ void *(* MCINotificationCenterPostStrictNotification)(NSUInteger, id, NSString *
 %hook LSStoryBucketViewController
 
 - (void)startTimer {
+    if (!disableStorySeenReceipts) return %orig;
+
     // Here we simply invoke [super startTimer] to do the timming job
     struct objc_super superInfo = {
         .receiver = self,
@@ -449,7 +451,7 @@ void (* MCQTamClientTypingIndicatorStart)();
 
 id (* MSGAVFoundationEstimateMaxVideoDurationInputCreate)(MSGMediaVideoPhasset *, NSUInteger, NSInteger, id, id);
 %hookf(id, MSGAVFoundationEstimateMaxVideoDurationInputCreate, MSGMediaVideoPhasset *videoAsset, NSUInteger maxVideoResolution, NSInteger maxFileSizeInBytes, id roundingFactorInSeconds, id completion) {
-    MSHookIvar<CGFloat>([videoAsset asset], "_duration") = 1.0f; // max ≈ 13 mins
+    if (extendStoryVideoUploadLength) MSHookIvar<CGFloat>([videoAsset asset], "_duration") = 1.0f; // max ≈ 13 mins
     return %orig;
 }
 
@@ -460,7 +462,7 @@ id (* MSGAVFoundationEstimateMaxVideoDurationInputCreate)(MSGMediaVideoPhasset *
 
 BOOL (* MSGCSessionedMobileConfigGetBoolean)(id, MSGCSessionedMobileConfig *, BOOL, BOOL);
 %hookf(BOOL, MSGCSessionedMobileConfigGetBoolean, id context, MSGCSessionedMobileConfig *config, BOOL arg3, BOOL arg4) {
-    if (strcmp(config->subKey, "replace_system_trimmer") == 0) {
+    if (extendStoryVideoUploadLength && strcmp(config->subKey, "replace_system_trimmer") == 0) {
         return YES;
     }
 
@@ -469,7 +471,7 @@ BOOL (* MSGCSessionedMobileConfigGetBoolean)(id, MSGCSessionedMobileConfig *, BO
 
 CGFloat (* MSGCSessionedMobileConfigGetDouble)(id, MSGCSessionedMobileConfig *, BOOL, BOOL);
 %hookf(CGFloat, MSGCSessionedMobileConfigGetDouble, id context, MSGCSessionedMobileConfig *config, BOOL arg3, BOOL arg4) {
-    if (strcmp(config->subKey, "max_story_duration") == 0) {
+    if (extendStoryVideoUploadLength && strcmp(config->subKey, "max_story_duration") == 0) {
         return 600.0f; // 10 mins
     }
 
