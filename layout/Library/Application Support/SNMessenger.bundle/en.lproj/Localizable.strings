@@ -18,7 +18,7 @@
 "DISABLE_READ_RECEIPTS" = "Disable read receipts";
 "DISABLE_LONG_PRESS_TO_CHANGE_THEME" = "Disable long press to change theme";
 "CONFIG_TYPING_INDICATOR" = "Configure typing indicator";
-"CONFIG_TYPING_INDICATOR_TITLE" = "Typing Indicator Settings";
+"CONFIG_TYPING_INDICATOR_TITLE" = "Typing indicator settings";
 "DISABLE_TYPING_INDICATOR" = "Disable typing indicator";
 "DISABLE_TYPING_INDICATOR_DESCRIPTION" = "No one will know you're typing";
 "HIDE_TYPING_INDICATOR_HEADER_TITLE" = "Hide others' typing indicator";
@@ -28,7 +28,7 @@
 "BOTH" = "Both";
 "HIDE_NOTIF_BADGES_IN_CHAT" = "Hide notif badges in chat top bar";
 "CONFIG_KEYBOARD_STATE" = "Configure keyboard state in chat";
-"CONFIG_KEYBOARD_STATE_TITLE" = "Keyboard State Settings";
+"CONFIG_KEYBOARD_STATE_TITLE" = "Keyboard state settings";
 "KEYBOARD_STATE_AFTER_ENTER_CHAT" = "Keyboard state after entering a chat";
 "ADAPTIVE" = "Adaptive (default)";
 "ALWAYS_EXPANDED" = "Always expanded";

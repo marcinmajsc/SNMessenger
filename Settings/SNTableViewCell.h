@@ -1,6 +1,6 @@
-#import <notify.h>
 #import "SNCellModel.h"
 #import "Utilities.h"
+#import <notify.h>
 
 @interface SNTableViewCell : UITableViewCell {
     SNCellModel *_cellData;

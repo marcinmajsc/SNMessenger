@@ -83,3 +83,14 @@
 
 @interface MSGStoryOverlayProfileViewActionStandard : MSGModel
 @end
+
+#pragma mark - Icon stuffs
+
+@interface MDSColorTypeMdsColor : MSGModel
+@end
+
+@interface MDSGeneratedImageIconStyleNormal : MSGModel
+@end
+
+@interface MDSGeneratedImageSpecIcon : MSGModel
+@end

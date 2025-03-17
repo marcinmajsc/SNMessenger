@@ -62,7 +62,7 @@ static NSString * const kTOInsetGroupedTableCellSelected = @"selected";
 }
 
 - (UITableViewCellSeparatorStyle)separatorStyle {
-    return self.realSeparatorStyle > -1 ? self.realSeparatorStyle : [super separatorStyle];
+    return self.realSeparatorStyle > -1 ? (UITableViewCellSeparatorStyle)self.realSeparatorStyle : [super separatorStyle];
 }
 
 #pragma mark - Observer Life-cycle -

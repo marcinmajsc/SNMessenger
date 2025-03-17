@@ -72,6 +72,73 @@ static void reloadPrefs() {
     hideSuggestedContactsInSearch = [[settings objectForKey:@"hideSuggestedContactsInSearch"] ?: @(NO) boolValue];
 }
 
+MDSColorTypeMdsColor *(* MDSColorTypeMdsColorCreate)(NSUInteger);
+MDSGeneratedImageIconStyleNormal *(* MDSGeneratedImageIconStyleNormalCreate)();
+MDSGeneratedImageSpecIcon *(* MDSGeneratedImageSpecIconCreate)(NSUInteger, MDSColorTypeMdsColor *, id);
+
+MDSGeneratedImageView *MDSGeneratedImageViewCreate(NSString *iconName, NSUInteger colorCode, CGSize size) {
+    // Get icon code (Hard-coded in `MDSIconNameString`)
+    NSUInteger iconCode = 0;
+    SwitchStr (iconName) {
+        CaseEqual (@"CautionTriangle") {
+            iconCode = 119736542;
+            break;
+        }
+
+        CaseEqual (@"Checkmark") {
+            iconCode = 377961600;
+            break;
+        }
+
+        CaseEqual (@"ChevronRight") {
+            iconCode = 872221393;
+            break;
+        }
+
+        CaseEqual (@"Eye") {
+            iconCode = 27507802;
+            break;
+        }
+
+        CaseEqual (@"EyeCross") {
+            iconCode = 273785350;
+            break;
+        }
+
+        Default {
+            break;
+        }
+    }
+
+    // Fix color code in older versions
+    if (MessengerVersion() == 458) {
+        switch (colorCode) {
+            case 10093: {
+                colorCode = 10096;
+                break;
+            }
+
+            case 10094: {
+                colorCode = 10082;
+                break;
+            }
+
+            case 10096: {
+                colorCode = 10098;
+                break;
+            }
+
+            default: break;
+        }
+    }
+
+    MDSColorTypeMdsColor *color = MDSColorTypeMdsColorCreate(colorCode);
+    MDSGeneratedImageSpecIcon *spec = MDSGeneratedImageSpecIconCreate(iconCode, color, MDSGeneratedImageIconStyleNormalCreate());
+    MDSGeneratedImageView *imageView = [[%c(MDSGeneratedImageView) alloc] initWithFrame:{{0, 0}, size}];
+    [imageView setSpec:spec];
+    return imageView;
+}
+
 #pragma mark - Settings page | Quick toggle to disable/enable read receipts
 
 %hook MSGCommunityListViewController
@@ -105,15 +172,15 @@ static void reloadPrefs() {
 
 %end
 
-// v458.0.0
 %hook MDSNavigationController
 %property (nonatomic, retain) UIBarButtonItem *eyeItem;
 %property (nonatomic, retain) UIBarButtonItem *settingsItem;
 
 - (void)viewWillAppear:(BOOL)arg1 {
+    // v458.0.0 (old UI)
     if (!self.settingsItem && [[self childViewControllerForUserInterfaceStyle] isKindOfClass:%c(MSGSettingsViewController)]) {
         UIButton *settingsButton = [[UIButton alloc] init];
-        UIImage *settingsIcon = getTemplateImage(@"Gear@3x");
+        UIImage *settingsIcon = [MDSGeneratedImageViewCreate(@"CautionTriangle", 10096, {24, 24}) image];
         [settingsButton setImage:settingsIcon forState:UIControlStateNormal];
         [settingsButton addTarget:self action:@selector(openSettings) forControlEvents:UIControlEventTouchUpInside];
         self.settingsItem = [[UIBarButtonItem alloc] initWithCustomView:settingsButton];
@@ -128,7 +195,7 @@ static void reloadPrefs() {
 
     if (showTheEyeButton && !self.eyeItem && [[self childViewControllerForUserInterfaceStyle] isKindOfClass:%c(MSGInboxViewController)]) {
         UIButton *eyeButton = [[UIButton alloc] init];
-        UIImage *eyeIcon = getTemplateImage(disableReadReceipts ? @"No-Receipt@3x" : @"Receipt@3x");
+        UIImage *eyeIcon = [MDSGeneratedImageViewCreate(disableReadReceipts ? @"EyeCross" : @"Eye", 10093, {24, 24}) image];
         [eyeButton setImage:eyeIcon forState:UIControlStateNormal];
         [eyeButton addTarget:self action:@selector(handleEyeTap:) forControlEvents:UIControlEventTouchUpInside];
         self.eyeItem = [[UIBarButtonItem alloc] initWithCustomView:eyeButton];
@@ -149,7 +216,7 @@ static void reloadPrefs() {
 
 %new(v@:@)
 - (void)handleEyeTap:(UIButton *)eyeButton {
-    UIImage *eyeIcon = getTemplateImage(!disableReadReceipts ? @"No-Receipt@3x" : @"Receipt@3x");
+    UIImage *eyeIcon = [MDSGeneratedImageViewCreate(!disableReadReceipts ? @"EyeCross" : @"Eye", 10093, {24, 24}) image];
     [eyeButton setImage:eyeIcon forState:UIControlStateNormal];
 
     [settings setObject:[NSNumber numberWithBool:!disableReadReceipts] forKey:@"disableReadReceipts"];
@@ -699,26 +766,28 @@ static BOOL hideTabBar = NO;
     CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)reloadPrefs, CFSTR(PREF_CHANGED_NOTIF), NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
     reloadPrefs();
 
-    // Get the tweak bundle
+    // Get Messenger's bundle & image refs of frameworks
     tweakBundle = SNMessengerBundle();
-
-    MSImageRef LSEngineRef = getImageRef(@"LightSpeedEngine.framework/LightSpeedEngine");
     MSImageRef LSCoreRef = getImageRef(@"LightSpeedCore.framework/LightSpeedCore");
+    MSImageRef LSEngineRef = getImageRef(@"LightSpeedEngine.framework/LightSpeedEngine");
+
+    LSRTCValidateCallIntentForKey = (id (*)(NSString *, id, LSRTCCallIntentValidatorParams *))MSFindSymbol(LSCoreRef, "_LSRTCValidateCallIntentForKey");
+    MDSColorTypeMdsColorCreate = (MDSColorTypeMdsColor *(*)(NSUInteger))MSFindSymbol(LSCoreRef, "_MDSColorTypeMdsColorCreate");
+    MDSGeneratedImageIconStyleNormalCreate = (MDSGeneratedImageIconStyleNormal *(*)())MSFindSymbol(LSCoreRef, "_MDSGeneratedImageIconStyleNormalCreate");
+    MDSGeneratedImageSpecIconCreate = (MDSGeneratedImageSpecIcon *(*)(NSUInteger, MDSColorTypeMdsColor *, id))MSFindSymbol(LSCoreRef, "_MDSGeneratedImageSpecIconCreate");
 
     if (MessengerVersion() > 458.0) {
-        MCQTamClientTypingIndicatorStart = (void (*)())MSFindSymbol(LSEngineRef, "_MCQTamClientTypingIndicatorStart");
-        %init(MCQTamClientTypingIndicatorStart);
-
-        LSRTCValidateCallIntentForKey = (id (*)(NSString *, id, LSRTCCallIntentValidatorParams *))MSFindSymbol(LSCoreRef, "_LSRTCValidateCallIntentForKey");
         MSGModelDefineClass = (Class (*)(MSGModelInfo *))MSFindSymbol(LSEngineRef, "_MSGModelDefineClass");
 
         MCINotificationCenterPostNotification = (void *(*)(id, NSString *, NSString *, NSMutableDictionary *))MSFindSymbol(LSEngineRef, "_MCINotificationCenterPostNotification");
         %init(MCINotificationCenterPostNotification);
 
+        MCQTamClientTypingIndicatorStart = (void (*)())MSFindSymbol(LSEngineRef, "_MCQTamClientTypingIndicatorStart");
+        %init(MCQTamClientTypingIndicatorStart);
+
         MSGAVFoundationEstimateMaxVideoDurationInputCreate = (id (*)(MSGMediaVideoPhasset *, NSUInteger, NSInteger, id, id))MSFindSymbol(LSEngineRef, "_MSGAVFoundationEstimateMaxVideoDurationInputCreate");
         %init(MSGAVFoundationEstimateMaxVideoDurationInputCreate);
     } else {
-        LSRTCValidateCallIntentForKey = (id (*)(NSString *, id, LSRTCCallIntentValidatorParams *))MSFindSymbol(LSCoreRef, "_LSRTCValidateCallIntentForKey");
         MSGModelDefineClass = (Class (*)(MSGModelInfo *))MSFindSymbol(LSCoreRef, "_MSGModelDefineClass");
 
         MCINotificationCenterPostStrictNotification = (void *(*)(NSUInteger, id, NSString *, NSString *, NSMutableDictionary *))MSFindSymbol(LSCoreRef, "_MCINotificationCenterPostStrictNotification");

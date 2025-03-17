@@ -26,10 +26,7 @@
 
         switch (cellData.type) {
             case Button: {
-                UIImageView *indicatorView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 16, 24)];
-                indicatorView.tintColor = colorWithHexString(isDarkMode ? @"#ffffff30" : @"#00000033");
-                indicatorView.image = getTemplateImage(@"Arrow@3x");
-                self.accessoryView = indicatorView;
+                self.accessoryView = MDSGeneratedImageViewCreate(@"ChevronRight", 10094, {24, 24});
                 break;
             }
 
@@ -91,10 +88,7 @@
     id savedValue = [self readPreferenceValueForKey:_cellData.prefKey];
     NSString *value = savedValue ?: _cellData.defaultValue;
 
-    UIImageView *indicatorView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 24, 24)];
-    indicatorView.tintColor = colorWithHexString(isDarkMode ? @"#429AFF" : @"#0A7CFF");
-    indicatorView.image = getTemplateImage(@"Tick@3x");
-
+    MDSGeneratedImageView *indicatorView = MDSGeneratedImageViewCreate(@"Checkmark", 10096, {24, 24});
     self.accessoryView = [value isEqualToString:_cellData.labelKey] ? indicatorView : nil;
 }
 

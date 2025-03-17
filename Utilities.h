@@ -1,3 +1,5 @@
+#import "Headers/MDSGeneratedImageView.h"
+#import "Headers/MSGModelClasses.h"
 #import <CydiaSubstrate.h>
 #import <UIKit/UIKit.h>
 #import <RemoteLog.h> // For debugging
@@ -16,8 +18,14 @@
 
 #define Default
 
+// Shared variables & functions
 extern BOOL isDarkMode;
 extern NSBundle *tweakBundle;
+
+extern MDSColorTypeMdsColor *(* MDSColorTypeMdsColorCreate)(NSUInteger);
+extern MDSGeneratedImageIconStyleNormal *(* MDSGeneratedImageIconStyleNormalCreate)();
+extern MDSGeneratedImageSpecIcon *(* MDSGeneratedImageSpecIconCreate)(NSUInteger, MDSColorTypeMdsColor *, id);
+extern MDSGeneratedImageView *MDSGeneratedImageViewCreate(NSString *, NSUInteger, CGSize);
 
 static inline MSImageRef getImageRef(NSString *framework) {
     NSString *frameworkPath = [NSString stringWithFormat:@"%@/Frameworks/%@", [[NSBundle mainBundle] bundlePath], framework];
@@ -47,7 +55,7 @@ static inline NSMutableDictionary *getCurrentSettings() {
 }
 
 static inline NSMutableDictionary *compareDictionaries(NSDictionary *oldDict, NSDictionary *newDict) {
-    NSMutableDictionary *result = [NSMutableDictionary dictionary];
+    NSMutableDictionary *result = [@{} mutableCopy];
 
     [newDict enumerateKeysAndObjectsUsingBlock:^(NSString *key, id newDictObj, BOOL *stop) {
         id oldDictObj = oldDict[key];
@@ -63,10 +71,6 @@ static inline NSMutableDictionary *compareDictionaries(NSDictionary *oldDict, NS
 static inline UIImage *getImage(NSString *name) {
     NSString *path = [tweakBundle pathForResource:name ofType:@"png"];
     return [UIImage imageWithContentsOfFile:path];
-}
-
-static inline UIImage *getTemplateImage(NSString *name) {
-    return [getImage(name) imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
 }
 
 static inline UIImage *scaleImageWithSize(UIImage *image, CGSize size) {
