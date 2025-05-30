@@ -1,0 +1,172 @@
+# Original idea by @ISnackable. Thanks to him for handling the hardest parts!
+# https://github.com/ISnackable/YTCubePlus/blob/main/.github/workflows/Build.yml
+
+name: Build and Release MESSENGER-IOS-SIDELOAD
+
+on:
+  workflow_dispatch:
+    inputs:
+      sdk_version:
+        description: "iOS SDK version to be used during build"
+        default: "16.5"
+        required: true
+        type: string
+      tweak_version:
+        description: "The version of Tweak"
+        default: "1.1.0"
+        required: true
+        type: string
+      commit_id:
+        description: "Commit ID"
+        default: ""
+        required: false
+        type: string
+      decrypted_messenger_url:
+        description: "The direct URL to the decrypted Messenger ipa"
+        default: ""
+        required: true
+        type: string
+      bundle_id:
+        description: "Modify the bundle ID. Not recommended"
+        default: "com.facebook.Messenger"
+        required: true
+        type: string
+      app_name:
+        description: "Modify the name of the app on the Home Screen. Not recommended"
+        default: "Messenger"
+        required: true
+        type: string
+      create_release:
+        description: "Create a draft release"
+        default: true
+        required: false
+        type: boolean
+      upload_artifact:
+        description: "Upload Artifact"
+        default: false
+        required: false
+        type: boolean
+  
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build messenger-ios-sideload
+    runs-on: macos-13
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Main
+        uses: actions/checkout@v4.1.1
+        with:
+          path: main
+          ref: ${{ github.event.inputs.commit_id || github.ref }}
+          submodules: recursive
+
+      - name: Install Dependencies
+        run: brew install ldid dpkg make
+
+      - name: Set PATH environment variable
+        run: echo "$(brew --prefix make)/libexec/gnubin" >> $GITHUB_PATH 
+
+      - name: Setup Theos
+        uses: actions/checkout@v4.1.1
+        with:
+          repository: theos/theos
+          ref: master
+          path: theos
+          submodules: recursive
+      
+      - name: SDK Caching
+        id: SDK
+        uses: actions/cache@v4.0.2
+        env:
+          cache-name: iOS-${{ inputs.sdk_version }}-SDK
+        with:
+          path: theos/sdks/
+          key: ${{ env.cache-name }}
+          restore-keys: ${{ env.cache-name }}
+
+      - name: Download iOS SDK
+        if: steps.SDK.outputs.cache-hit != 'true'
+        run: |
+          git clone -n --depth=1 --filter=tree:0 https://github.com/theos/sdks/
+          cd sdks
+          git sparse-checkout set --no-cone iPhoneOS${{ inputs.sdk_version }}.sdk
+          git checkout
+          mv *.sdk $THEOS/sdks
+        env:
+          THEOS: ${{ github.workspace }}/theos
+
+      - name: Setup Theos Jailed
+        uses: actions/checkout@v4.1.1
+        with:
+          repository: qnblackcat/theos-jailed
+          ref: master
+          path: theos-jailed
+          submodules: recursive
+
+      - name: Install Theos Jailed
+        run: |
+          ./theos-jailed/install
+        env:
+          THEOS: ${{ github.workspace }}/theos
+
+      - name: Prepare Messenger iPA
+        id: prepare_messenger
+        run: |
+          wget "$MESSENGER_URL" --no-verbose -O main/Messenger.app
+          cd ${{ github.workspace }}/main
+          mv Messenger.app Messenger.zip
+          unzip -q Messenger.zip
+          messenger_version=$(defaults read "$(pwd)/Payload/Messenger.app/Info" CFBundleVersion)
+          echo "==> Messenger v$messenger_version downloaded!"
+          echo "messenger_version=${messenger_version}" >> $GITHUB_OUTPUT
+
+        env:
+          THEOS: ${{ github.workspace }}/theos
+          MESSENGER_URL: ${{ inputs.decrypted_messenger_url }}
+
+      - name: Fix compiling & Build Package
+        id: build_package
+        run: |
+          cd ${{ github.workspace }}/main
+          make package THEOS_PACKAGE_SCHEME=rootless IPA=Payload/Messenger.app FINALPACKAGE=1
+          # make package FINALPACKAGE=1
+          echo "package=$(ls -t packages | head -n1)" >>$GITHUB_OUTPUT
+          echo -e "==> \033[1mSHASUM256: $(shasum -a 256 packages/*.ipa | cut -f1 -d' ')\033[0m"
+          echo -e "==> \033[1mBundle ID: ${{ env.BUNDLE_ID }}\033[0m"
+
+        env:
+          THEOS: ${{ github.workspace }}/theos
+          TWEAK_VERSION: ${{ inputs.tweak_version }}
+          BUNDLE_ID: ${{ inputs.bundle_id }}
+          APP_NAME: ${{ inputs.app_name }}
+
+      - name: Upload Artifact
+        if: ${{ inputs.upload_artifact }}
+        uses: actions/upload-artifact@v4.3.1
+        env:
+          TWEAK_VERSION: ${{ inputs.tweak_version }}
+          MESSENGER_VERSION: ${{ steps.prepare_messenger.outputs.messenger_version }}
+        with:
+          name: MESSENGER-IOS-SIDELOAD_${{ env.MESSENGER_VERSION }}_${{ env.MESSENGER_VERSION }}
+          path: ${{ github.workspace }}/main/packages/${{ steps.build_package.outputs.package }}
+          if-no-files-found: error
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2.0.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TWEAK_VERSION: ${{ inputs.tweak_version }}
+          MESSENGER_VERSION: ${{ steps.prepare_messenger.outputs.messenger_version }}
+          DRAFT: ${{ inputs.create_release }}
+        with:
+          tag_name: v${{ env.MESSENGER_VERSION }}-${{ env.TWEAK_VERSION }}-(${{ github.run_number }})
+          name: v${{ env.MESSENGER_VERSION }}-${{ env.TWEAK_VERSION }}-(${{ github.run_number }})
+          files: main/packages/*.ipa
+          draft: ${{ env.DRAFT }}
