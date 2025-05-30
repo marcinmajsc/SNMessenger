@@ -2,16 +2,14 @@ INSTALL_TARGET_PROCESSES = Messenger
 PACKAGE_VERSION = 1.1.0
 ARCHS = arm64
 
-ifeq ($(ROOTLESS), 1)
-    THEOS_PACKAGE_SCHEME = rootless
-    TARGET = iphone:clang:latest:15.0
-else
-    TARGET = iphone:clang:latest:12.4
-endif
+TARGET = iphone:clang:latest:15.0
 
 include $(THEOS)/makefiles/common.mk
 
+SUBPROJECTS += keychainfix
+
 TWEAK_NAME = SNMessenger
+$(TWEAK_NAME)_FRAMEWORKS = UIKit Foundation AVFoundation AVKit CoreMotion GameController VideoToolbox Accelerate CoreMedia CoreImage CoreGraphics ImageIO Photos CoreServices SystemConfiguration SafariServices Security QuartzCore WebKit SceneKit
 $(TWEAK_NAME)_FILES = $(wildcard *.xm Settings/*.mm)
 $(TWEAK_NAME)_CCFLAGS = -std=c++17
 $(TWEAK_NAME)_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -Wno-nullability-completeness -Wno-unused-function -Wno-unused-property-ivar -Wno-error
