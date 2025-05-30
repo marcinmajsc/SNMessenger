@@ -314,10 +314,6 @@ Class (* MSGModelDefineClass)(MSGModelInfo *);
             break;
         }
 
-        default: {
-            RLog(@"model: %@ | field: %@ | type: %lu | encoding: %s", self, name, type, encoding);
-            break;
-        }
     }
 
     va_end(args);
