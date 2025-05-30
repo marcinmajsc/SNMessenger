@@ -14,6 +14,6 @@ include $(THEOS)/makefiles/common.mk
 TWEAK_NAME = SNMessenger
 $(TWEAK_NAME)_FILES = $(wildcard *.xm Settings/*.mm)
 $(TWEAK_NAME)_CCFLAGS = -std=c++17
-$(TWEAK_NAME)_CFLAGS = -fobjc-arc
+$(TWEAK_NAME)_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -Wno-nullability-completeness -Wno-unused-function -Wno-unused-property-ivar -Wno-error
 
 include $(THEOS_MAKE_PATH)/tweak.mk
