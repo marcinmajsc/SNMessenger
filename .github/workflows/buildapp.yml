@@ -82,7 +82,7 @@ jobs:
       
       - name: SDK Caching
         id: SDK
-        uses: actions/cache@v4.0.2
+        uses: actions/cache@v4
         env:
           cache-name: iOS-${{ inputs.sdk_version }}-SDK
         with:
@@ -109,12 +109,6 @@ jobs:
           path: theos-jailed
           submodules: recursive
 
-      - name: Install Theos Jailed
-        run: |
-          ./theos-jailed/install
-        env:
-          THEOS: ${{ github.workspace }}/theos
-
       - name: Prepare Messenger iPA
         id: prepare_messenger
         run: |
@@ -134,7 +128,7 @@ jobs:
         id: build_package
         run: |
           cd ${{ github.workspace }}/main
-          make package THEOS_PACKAGE_SCHEME=rootless IPA=Payload/Messenger.app FINALPACKAGE=1
+          make package IPA=Payload/Messenger.app FINALPACKAGE=1
           # make package FINALPACKAGE=1
           echo "package=$(ls -t packages | head -n1)" >>$GITHUB_OUTPUT
           echo -e "==> \033[1mSHASUM256: $(shasum -a 256 packages/*.ipa | cut -f1 -d' ')\033[0m"
