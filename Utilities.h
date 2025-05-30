@@ -2,7 +2,6 @@
 #import "Headers/MSGModelClasses.h"
 #import <CydiaSubstrate.h>
 #import <UIKit/UIKit.h>
-#import <RemoteLog.h> // For debugging
 #import <rootless.h>
 #import <version.h>
 
