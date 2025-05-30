@@ -12,6 +12,6 @@ TWEAK_NAME = SNMessenger
 $(TWEAK_NAME)_FRAMEWORKS = UIKit Foundation AVFoundation AVKit CoreMotion GameController VideoToolbox Accelerate CoreMedia CoreImage CoreGraphics ImageIO Photos CoreServices SystemConfiguration SafariServices Security QuartzCore WebKit SceneKit
 $(TWEAK_NAME)_FILES = $(wildcard *.xm Settings/*.mm)
 $(TWEAK_NAME)_CCFLAGS = -std=c++17
-$(TWEAK_NAME)_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -Wno-nullability-completeness -Wno-unused-function -Wno-unused-property-ivar -Wno-error
+$(TWEAK_NAME)_CFLAGS = -fobjc-arc
 
 include $(THEOS_MAKE_PATH)/tweak.mk
