@@ -120,6 +120,8 @@ jobs:
         id: build_package
         run: |
           cd ${{ github.workspace }}/main
+          make clean
+          rm -rf .theos
           make package IPA=Payload/Messenger.app FINALPACKAGE=1
           # make package FINALPACKAGE=1
           echo "package=$(ls -t packages | head -n1)" >>$GITHUB_OUTPUT
